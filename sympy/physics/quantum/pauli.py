@@ -8,8 +8,8 @@ from sympy import sympify
 from sympy.core import Expr, Function
 from .add import Add
 from .mul import Mul
-from sympy.core.numbers import I
 from .power import Pow
+from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
@@ -61,6 +61,14 @@ class SigmaOpBase(Operator):
             return self
         obj = Mul(self,other)
         return obj
+
+    def _pow(self, other):
+        from sympy import sympify
+        if sympify(other) is S.Zero:
+            return(self._identity())
+        else:
+            return Pow(self,other)
+
 
 class SigmaI(SigmaOpBase, IdentityOperator):
     """Pauli sigma Identity operator
