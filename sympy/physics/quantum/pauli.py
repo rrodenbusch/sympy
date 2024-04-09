@@ -7,9 +7,10 @@ import sympy.core.power
 from sympy import sympify
 from sympy import Symbol
 from sympy.core import Expr, Function
-from .add import Add
-from .mul import Mul
-from .power import Pow
+# from .add import Add
+# from .mul import Mul
+# from .power import Pow
+from .core import Add, Mul, Pow
 from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
@@ -17,7 +18,6 @@ from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.core.decorators import call_highest_priority
 
 __all__ = [
     'SigmaI', 'SigmaX', 'SigmaY', 'SigmaZ', 'SigmaMinus', 'SigmaPlus', 'SigmaZKet',
@@ -962,7 +962,6 @@ def qcollect_pauli(e,ops=None, *args, **kwargs):
         if len(coefs[idx]) == 1:
             args.append(Mul(coefs[idx][0],ops[idx]))
         elif len(coefs[idx]):
-            args.append(Mul(sympy.physics.quantum.add.Add(*coefs[idx]),ops[idx]))
+            args.append(Mul(Add(*coefs[idx]),ops[idx]))
 
     return Add(*args)
-

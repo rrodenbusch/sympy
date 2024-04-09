@@ -12,7 +12,7 @@
     Any remaining symbols will then be passed to the core collect function.
 
 """
-from sympy import collect
+from sympy import collect as core_collect
 from sympy.physics.quantum import Operator
 def collect(e, syms, *args, **kwargs):
     expr = e
@@ -27,8 +27,7 @@ def collect(e, syms, *args, **kwargs):
                 func_syms.append(sym)
                 op_funcs[func] = func_syms
         for _func, _syms in op_funcs.items():
-            (a, b) = (_func, _syms)
             expr = _func(expr, _syms, *args, **kwargs)
         if len(other_syms):
-            return collect(e, other_syms, *args, **kwargs)
+            return core_collect(e, other_syms, *args, **kwargs)
     return(expr)

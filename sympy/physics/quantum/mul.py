@@ -6,7 +6,7 @@
 """
 
 import sympy.core.mul
-from sympy.physics.quantum.collect import collect
+import sympy.physics.quantum.collect
 import sympy.physics.quantum.add
 import sympy.physics.quantum.power
 from sympy.core.decorators import call_highest_priority

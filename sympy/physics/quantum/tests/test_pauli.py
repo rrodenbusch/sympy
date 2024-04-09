@@ -1,8 +1,6 @@
 from sympy import symbols
 import sympy.core.mul
-from sympy.physics.quantum.mul import Mul
-from sympy.physics.quantum.add import Add
-from sympy.physics.quantum.power import Pow
+from sympy.physics.quantum.core import Add, Mul, Pow
 from sympy.core.numbers import I
 from sympy.matrices.dense import Matrix
 from sympy.printing.latex import latex

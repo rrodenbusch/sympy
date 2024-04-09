@@ -29,7 +29,7 @@ __all__ = [
 
     'hbar', 'HBar',
 
-    'Pow', 'Add', 'Mul',
+    'Pow', 'Add', 'Mul', 'collect'
 
 ]
 from .anticommutator import AntiCommutator
@@ -60,8 +60,4 @@ from .tensorproduct import TensorProduct, tensor_product_simp
 
 from .constants import hbar, HBar
 
-from .add import Add
-
-from .mul import Mul
-
-from .power import Pow
+from .core import Add, Mul, Pow

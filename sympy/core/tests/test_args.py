@@ -3824,19 +3824,19 @@ def test_sympy__physics__quantum__pauli__SigmaOpBase():
 
 
 def test_sympy__physics__quantum__power__Pow():
-    from sympy.physics.quantum.power import Pow
+    from sympy.physics.quantum.cpre import Pow
     (b,e) = symbols(('b','e'))
     assert _test_args(Pow(b,e))
 
 
 def test_sympy__physics__quantum__add__Add():
-    from sympy.physics.quantum.add import Add
+    from sympy.physics.quantum.core import Add
     (b,e) = symbols(('b','e'))
     assert _test_args(Add(b,e))
 
 
 def test_sympy__physics__quantum__mul__Mul():
-    from sympy.physics.quantum.mul import Mul
+    from sympy.physics.quantum.core import Mul
     (b,e) = symbols(('b','e'))
     assert _test_args(Mul(b,e))
 
