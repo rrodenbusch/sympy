@@ -5,6 +5,7 @@ import sympy.core.mul
 import sympy.core.power
 
 from sympy import sympify
+from sympy import Symbol
 from sympy.core import Expr, Function
 from .add import Add
 from .mul import Mul
@@ -16,6 +17,7 @@ from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.core.decorators import call_highest_priority
 
 __all__ = [
     'SigmaI', 'SigmaX', 'SigmaY', 'SigmaZ', 'SigmaMinus', 'SigmaPlus', 'SigmaZKet',
@@ -25,6 +27,13 @@ __all__ = [
 
 class SigmaOpBase(Operator):
     """Pauli sigma operator, base class"""
+    @property
+    def _op_priority(self):
+        return 200
+
+    @property
+    def mul_identity(self):
+        return SigmaI(self.name)
 
     @property
     def name(self):
@@ -38,37 +47,57 @@ class SigmaOpBase(Operator):
     def default_args(self):
         return (False,)
 
-    def _identity(self):
-        return SigmaI(self.name)
-
     def __new__(cls, *args, **hints):
         return Operator.__new__(cls, *args, **hints)
 
     def _eval_commutator_BosonOp(self, other, **hints):
         return S.Zero
 
+    def _add(self,*args,**kwargs):
+        return self.__add__(*args,**kwargs)
+
+    def __radd__(self,other):
+        return Add(other,self)
+
     def __add__(self, other):
-
         if sympify(other) == S.Zero:
-            return SigmaI(self.name)
+            return self.mul_identity
 
-        obj = Add(self,other)
-        return obj
+        return Add(self,other)
+
+    def _mul(self,*args,**kwargs):
+        return self.__mul__(*args,**kwargs)
+
+    def __rmul__(self,other):
+        return Mul(other,self)
 
     def __mul__(self, other):
-
         if isinstance(other, SigmaI):
             return self
-        obj = Mul(self,other)
-        return obj
+        return Mul(self,other)
 
     def _pow(self, other):
         from sympy import sympify
         if sympify(other) is S.Zero:
-            return(self._identity())
+            return(self.mul_identity)
         else:
             return Pow(self,other)
 
+    # @call_highest_priority('collect')
+    def collect(e, syms, *args, **kwargs):
+        op_syms = list(filter(lambda x: isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
+        other_syms =  list(filter(lambda x: not isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
+        if len(op_syms):
+            expr = qcollect_pauli(e, op_syms, *args, **kwargs)
+            if len(other_syms):
+                expr.collect(other_syms, *args, **kwargs)
+        elif len(other_syms):
+            return super().collect(other_syms, *args, **kwargs)
+        return(expr)
+
+    @property
+    def _eval_collect(self):
+        return qcollect_pauli
 
 class SigmaI(SigmaOpBase, IdentityOperator):
     """Pauli sigma Identity operator
@@ -143,6 +172,11 @@ class SigmaI(SigmaOpBase, IdentityOperator):
         else:
             raise NotImplementedError('Representation in format ' +
                                       format + ' not implemented.')
+
+
+    def simplify(self,*args,**kwargs):
+        print('SigmaBase Simplify')
+        super().simplify(self)
 
 
 class SigmaX(SigmaOpBase):
@@ -859,7 +893,7 @@ def qsimplify_pauli(e):
     return e
 
 
-def qcollect_pauli(e,ops=None):
+def qcollect_pauli(e,ops=None, *args, **kwargs):
     """
     Collect like terms in an expression containing the non-commutaive pauli operators.
 
@@ -885,10 +919,10 @@ def qcollect_pauli(e,ops=None):
     >>> qcollect_pauli(a*sx + b*sx + c*sy + d*sy)
     (a+b)*SigmaX() + (c+d)*SigmaY()
     """
-    if isinstance(e, Operator):
+    if isinstance(e, (Operator, Symbol)):
         return e
 
-    if not isinstance(e, sympy.core.Add):
+    if not isinstance(e, sympy.core.add.Add):
         if isinstance(e, (Expr, Function)):
             args=[]
             for arg in e.args:
@@ -928,6 +962,7 @@ def qcollect_pauli(e,ops=None):
         if len(coefs[idx]) == 1:
             args.append(Mul(coefs[idx][0],ops[idx]))
         elif len(coefs[idx]):
-            args.append(Mul(Add(*coefs[idx]),ops[idx]))
+            args.append(Mul(sympy.physics.quantum.add.Add(*coefs[idx]),ops[idx]))
 
     return Add(*args)
+

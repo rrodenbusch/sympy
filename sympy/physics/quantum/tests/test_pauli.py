@@ -1,6 +1,8 @@
 from sympy import symbols
 import sympy.core.mul
 from sympy.physics.quantum.mul import Mul
+from sympy.physics.quantum.add import Add
+from sympy.physics.quantum.power import Pow
 from sympy.core.numbers import I
 from sympy.matrices.dense import Matrix
 from sympy.printing.latex import latex
@@ -153,25 +155,45 @@ def test_pauli_power_core():
 def test_pauli_power_quantum():
     # from sympy.physics.quantum.power import Pow as qPow
     (a,b) = symbols('a:b')
+    ax = a*SigmaX()
+    by = a*SigmaY()
+    assert isinstance(a*SigmaI()*SigmaY(), Mul)
+    assert isinstance(a*SigmaI()+b*SigmaI(), Add)
+    assert isinstance(SigmaX()**a, Pow)
+    assert (a*SigmaX() + b*SigmaY())**0 == SigmaI()
+    assert Pow(a*SigmaX() + b*SigmaY(),0) == SigmaI()
+
     assert SigmaX()**0 == SigmaI()
     assert (SigmaX() + SigmaY())**0 == SigmaI()
     assert (SigmaX() * SigmaY())**0 == SigmaI()
+    assert (a*SigmaX() + b*SigmaY())**0 == SigmaI()
+
+    assert isinstance(ax * by, Mul)
 
 
 def test_pauli_collect():
     from sympy import sin
+    from sympy.physics.quantum.collect import collect
     (a,b,c,d,) = symbols('a:d')
-    (si, sx, sy, sz) = (SigmaI(), SigmaX(), SigmaY(), SigmaZ())
+    all = (si, sx, sy, sz) = (SigmaI(), SigmaX(), SigmaY(), SigmaZ())
 
-    testcases = (((a*sx + b*sx +c*sy + d*sy, None, ), (a+b)*sx + (c+d)*sy, ),
-                 ((a*si + b*sz +c*si + d*sz, None,  ), (a+c)*si + (b+d)*sz, ),
-                (((a+d)*sx + b*d*sx + c*sy + d*sy, None, ), (a+d+b*d)*sx + (c+d)*sy, ),
-                 (((a+d)*sz + b*d*si + c*si + d*sz, None, ), (b*d+c)*si + (a+2*d)*sz, ),
-                 (((a+d)*sz + b*d*si + c*si + d*sz, (si,), ), (b*d+c)*si + (a+d)*sz + d*sz, ),
-                ( (sin( (a + (d+(b*si+c*si)))), ),   sin(a+d+(b+c)*si), ),
+    testcases = (([a*sx + b*sx +c*sy + d*sy, all, ], (a+b)*sx + (c+d)*sy, ),
+                 ([a*si + b*sz +c*si + d*sz, all,  ], (a+c)*si + (b+d)*sz,),
+                 ([(a+d)*sx + b*d*sx + c*sy + d*sy, all, ], (a+d+b*d)*sx + (c+d)*sy, ),
+                 ([(a+d)*sz + b*d*si + c*si + d*sz, all, ], (b*d+c)*si + (a+2*d)*sz, ),
+                 ([(a+d)*sz + b*d*si + c*si + d*sz, (si,), ], (b*d+c)*si + (a+d)*sz + d*sz, ),
                 )
+
     for (args, result) in testcases:
         assert qcollect_pauli(*args) == result
+    for (args, result) in testcases:
+        assert collect(*args) == result
+    for (args, result) in testcases:
+        (e,syms) = args
+        assert e.collect(syms) == result
+
+    assert collect(sin( (a + (d+(b*si+c*si)))),  all) == sin(a+d+(b+c)*si)
+
 
     testcases = ((((a+d)*sz + b*d*si + c*si + d*sz, (si,),), (b*d+c)*si + (a+2*d)*sz, ),
                 )
@@ -179,6 +201,9 @@ def test_pauli_collect():
         assert qcollect_pauli(*args) != result
 
     raises(ValueError, lambda: qcollect_pauli( a*sx+b*sy, (a*si,)))
+
+    assert sx.collect( (sx, sy, a) ) == sx
+
 
 def test_pauli_states():
     si, sx, sz = SigmaI(), SigmaX(), SigmaZ()

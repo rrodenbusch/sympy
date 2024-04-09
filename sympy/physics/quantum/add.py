@@ -1,19 +1,38 @@
-"""sympy.physics.quantum subclass of sympy.core.Add"""
+"""sympy.physics.quantum subclass of sympy.core.Add
+
+   TODO:
+        1. Create a base class for power, add and mul to
+          simply the sub-classes Pow, Add and Mul
+"""
 
 import sympy.core.add
-from .power import Pow
-class Add( sympy.core.Add ):
+from sympy.physics.quantum.collect import collect
+import sympy.physics.quantum.mul
+import sympy.physics.quantum.power
+from sympy.core.decorators import call_highest_priority
+class Add( sympy.core.add.Add ):
 
-    _obj_priority = 100
+    @property
+    def _obj_priority(self):
+        return 100
+
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls, *args, **kwargs)
 
-    def __pow__(self,*args, **kwargs):
-        return Pow(self, *args, **kwargs)
+    def __radd__(self, other, *args, **kwargs):
+        return Add(other,self, *args, **kwargs)
 
-    def __add__(self,other):
-        lres = sympy.core.Add(self,other)
-        return lres
+    def __add__(self, *args, **kwargs):
+        return sympy.physics.quantum.add.Add(self, *args, **kwargs)
+
+    def __mul__(self, *args, **kwargs):
+        return sympy.physics.quantum.mul.Mul(self, *args, **kwargs)
+
+    def __rmul__(self, other, *args, **kwargs):
+        return sympy.physics.quantum.mul.Mul(other, self, *args, **kwargs)
+
+    def __pow__(self,*args, **kwargs):
+        return sympy.physics.quantum.power.Pow(self, *args, **kwargs)
 
     # Note from sympy.core.basic:
     # ===========================
@@ -28,4 +47,8 @@ class Add( sympy.core.Add ):
             other = Add(*other.args)
         return super().__eq__(other)
 
-    __hash__ = sympy.core.Add.__hash__
+    __hash__ = sympy.core.add.Add.__hash__
+
+    @call_highest_priority('collect')
+    def collect(self, syms, *args, **kwargs):
+        return sympy.physics.quantum.collect.collect(self, syms, *args, **kwargs)

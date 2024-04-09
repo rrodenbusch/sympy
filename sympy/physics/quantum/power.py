@@ -1,17 +1,33 @@
-"""sympy.physics.quantum subclass of sympy.core.Pow"""
+"""sympy.physics.quantum subclass of sympy.core.Pow
 
-import sympy
+    For powers of zero(0), check the arguments for the existence of
+    mul_identity and return the mul_identity operator instead of
+    S.One.
+
+    Supports the collection of non-commutative operators via the .collect.collect
+    function.
+
+   TODO:
+        1. Create a base class for power, add and mul to
+          simply the sub-classes Pow, Add and Mul
+"""
+
+
+import sympy.core.power
+import sympy.physics.quantum.add
+import sympy.physics.quantum.mul
 from sympy import sympify
 from sympy.core.singleton import S
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.core.decorators import call_highest_priority
 
 class Pow( sympy.core.power.Pow ):
     _op_priority = 110
     def __new__(cls, *args, **kwargs):
         if len(args) > 1 and sympify(args[1]) is S.Zero:
             (b,e,obj) = (args[0],S.Zero,None)
-            if isinstance(b, sympy.physics.quantum.qexpr.QExpr) and hasattr(b, '_identity'):
-                return b._identity()
+            if hasattr(b, 'mul_identity'):
+                return b.mul_identity
             elif isinstance(b, (Pow, sympy.physics.quantum.mul.Mul, sympy.physics.quantum.add.Add) ):
                 idents = {}
                 for arg in b.args:
@@ -55,3 +71,7 @@ class Pow( sympy.core.power.Pow ):
         return super().__eq__(other)
 
     __hash__ = sympy.core.power.Pow.__hash__
+
+    @call_highest_priority('collect')
+    def collect(self, syms, *args, **kwargs):
+        return sympy.physics.quantum.collect.collect(self, syms, *args, **kwargs)
