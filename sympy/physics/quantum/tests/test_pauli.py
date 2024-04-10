@@ -166,6 +166,9 @@ def test_pauli_power_quantum():
     assert (SigmaX() * SigmaY())**0 == SigmaI()
     assert (a*SigmaX() + b*SigmaY())**0 == SigmaI()
 
+    assert Pow(sx, a).subs(a, 0) == si
+    assert Pow(sx, a).subs(a, b) == sx**b
+
     assert isinstance(ax * by, Mul)
 
 
