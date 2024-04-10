@@ -1,4 +1,4 @@
-""" Base class for extension of core Add, Mul and Pow classes """
+""" Base class for extension of core Add, Mul and Pow classes"""
 import sympy
 from sympy import sympify
 from sympy.core.singleton import S

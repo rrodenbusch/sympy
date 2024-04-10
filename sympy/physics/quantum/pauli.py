@@ -1,4 +1,15 @@
-"""Pauli operators and states"""
+"""Pauli operators and states
+
+   TBD
+       Support default behavior in qsimplify_pauli that will
+       return S.One instead of ident and issue depecration
+       warning.  Three test cases fail with SigmaI as the
+       default multiplicative identity:
+            assert qsimplify_pauli(sx * sx) == 1
+            assert qsimplify_pauli(sy * sy) == 1
+            assert qsimplify_pauli(sz * sz) == 1
+
+"""
 
 import sympy.core.add
 import sympy.core.mul
@@ -7,10 +18,7 @@ import sympy.core.power
 from sympy import sympify
 from sympy import Symbol
 from sympy.core import Expr, Function
-# from .add import Add
-# from .mul import Mul
-# from .power import Pow
-from .core import Add, Mul, Pow
+from .core import Add, Mul, Pow, qCore
 from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
@@ -25,16 +33,8 @@ __all__ = [
 ]
 
 
-class SigmaOpBase(Operator):
+class SigmaOpBase(qCore, Operator):
     """Pauli sigma operator, base class"""
-    @property
-    def _op_priority(self):
-        return 200
-
-    @property
-    def mul_identity(self):
-        return SigmaI(self.name)
-
     @property
     def name(self):
         return self.args[0]
@@ -53,37 +53,34 @@ class SigmaOpBase(Operator):
     def _eval_commutator_BosonOp(self, other, **hints):
         return S.Zero
 
-    def _add(self,*args,**kwargs):
-        return self.__add__(*args,**kwargs)
+    @property
+    def _op_priority(self):
+        return 200
 
-    def __radd__(self,other):
-        return Add(other,self)
-
-    def __add__(self, other):
-        if sympify(other) == S.Zero:
-            return self.mul_identity
-
-        return Add(self,other)
-
-    def _mul(self,*args,**kwargs):
-        return self.__mul__(*args,**kwargs)
-
-    def __rmul__(self,other):
-        return Mul(other,self)
+    @property
+    def mul_identity(self):
+        return SigmaI(self.name)
 
     def __mul__(self, other):
         if isinstance(other, SigmaI):
             return self
         return Mul(self,other)
 
-    def _pow(self, other):
-        from sympy import sympify
-        if sympify(other) is S.Zero:
-            return(self.mul_identity)
+    def __pow__(self, other, *args, **kwargs):
+        if isinstance(self, SigmaI) or sympify(other) is S.Zero:
+            return(SigmaI(self.name))
         else:
             return Pow(self,other)
 
-    # @call_highest_priority('collect')
+    def _eval_power(self, e):
+        if isinstance(self, SigmaI):
+            return SigmaI
+        elif e.is_Integer and e.is_positive:
+            if int(e) % 2:
+                return self
+            else:
+                return SigmaI(self.name)
+
     def collect(e, syms, *args, **kwargs):
         op_syms = list(filter(lambda x: isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
         other_syms =  list(filter(lambda x: not isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
@@ -98,6 +95,7 @@ class SigmaOpBase(Operator):
     @property
     def _eval_collect(self):
         return qcollect_pauli
+
 
 class SigmaI(SigmaOpBase, IdentityOperator):
     """Pauli sigma Identity operator
@@ -161,9 +159,6 @@ class SigmaI(SigmaOpBase, IdentityOperator):
 
     def _print_contents(self, printer, *args):
         return 'SigmaI()'
-
-    def _eval_power(self, e):
-        return self
 
     def _represent_default_basis(self, **options):
         format = options.get('format', 'sympy')
@@ -245,12 +240,6 @@ class SigmaX(SigmaOpBase):
     def _print_contents(self, printer, *args):
         return 'SigmaX()'
 
-    def _eval_power(self, e):
-        if e.is_Integer and e.is_positive:
-            if int(e) % 2:
-                return SigmaX(self.name)
-            else:
-                return SigmaI(self.name)
 
     def _represent_default_basis(self, **options):
         format = options.get('format', 'sympy')
@@ -324,12 +313,6 @@ class SigmaY(SigmaOpBase):
     def _print_contents(self, printer, *args):
         return 'SigmaY()'
 
-    def _eval_power(self, e):
-        if e.is_Integer and e.is_positive:
-            if int(e) % 2:
-                return SigmaY(self.name)
-            else:
-                return SigmaI(self.name)
 
     def _represent_default_basis(self, **options):
         format = options.get('format', 'sympy')
@@ -403,12 +386,6 @@ class SigmaZ(SigmaOpBase):
     def _print_contents(self, printer, *args):
         return 'SigmaZ()'
 
-    def _eval_power(self, e):
-        if e.is_Integer and e.is_positive:
-            if int(e) % 2:
-                return SigmaZ(self.name)
-            else:
-                return SigmaI(self.name)
 
     def _represent_default_basis(self, **options):
         format = options.get('format', 'sympy')
