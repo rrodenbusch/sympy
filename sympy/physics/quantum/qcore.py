@@ -123,7 +123,7 @@ class Pow( QCore, sympy.core.power.Pow ):
 
     def __new__( cls, *args, **kwargs ):
         if len( args ) > 1 and sympify( args[1] ) is S.Zero:
-            ( b, e, obj ) = ( args[0], S.Zero, None )
+            ( b, e, ) = ( args[0], S.Zero, )
             if hasattr( b, 'mul_identity' ):
                 return b.mul_identity
             elif isinstance( b, ( Pow, Mul, Add ) ):
@@ -145,6 +145,7 @@ class Pow( QCore, sympy.core.power.Pow ):
                     return S.One
                 else:
                     return S.One
+
             if kwargs.get( 'evaluate', False ):
                 p = None
                 if hasattr( b, '_eval_power' ):

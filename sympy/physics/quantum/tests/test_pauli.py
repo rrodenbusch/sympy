@@ -213,8 +213,8 @@ def test_pauli_expand():
 
     EX = cos( ex ) * si + i * sin( ex ) * sx
     RX = cos( θx / 2 ) * si + i * sin( θx / 2 ) * sx
-    EY = cos( ey ) * si + i * sin( ey ) * sy
-    RY = cos( θy / 2 ) * si + i * sin( θy / 2 ) * sy
+    # EY = cos( ey ) * si + i * sin( ey ) * sy
+    # RY = cos( θy / 2 ) * si + i * sin( θy / 2 ) * sy
     EZ = cos( ez ) * si + i * sin( ez ) * sz
     RZ = cos( θz / 2 ) * si + i * sin( θz / 2 ) * sz
 

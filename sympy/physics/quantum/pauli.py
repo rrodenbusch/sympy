@@ -17,7 +17,7 @@ import sympy.core.power
 
 from sympy import sympify
 from sympy import Symbol
-from sympy.core import Expr, Function, expand as core_expand
+from sympy.core import Expr, Function
 from .qcore import Add, Mul, Pow, QCore
 from sympy.core.numbers import I
 from sympy.core.singleton import S
@@ -26,7 +26,6 @@ from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.core.decorators import call_highest_priority
 
 __all__ = [
     'SigmaI', 'SigmaX', 'SigmaY', 'SigmaZ', 'SigmaMinus', 'SigmaPlus', 'SigmaZKet',
@@ -34,75 +33,72 @@ __all__ = [
 ]
 
 
-class SigmaOpBase(QCore, Operator):
+class SigmaOpBase( QCore, Operator ):
     """Pauli sigma operator, base class"""
+
     @property
-    def name(self):
+    def name( self ):
         return self.args[0]
 
     @property
-    def use_name(self):
-        return bool(self.args[0]) is not False
+    def use_name( self ):
+        return bool( self.args[0] ) is not False
 
     @classmethod
-    def default_args(self):
-        return (False,)
+    def default_args( self ):
+        return ( False, )
 
-    def __new__(cls, *args, **hints):
-        return Operator.__new__(cls, *args, **hints)
+    def __new__( cls, *args, **hints ):
+        return Operator.__new__( cls, *args, **hints )
 
-    def _eval_commutator_BosonOp(self, other, **hints):
+    def _eval_commutator_BosonOp( self, other, **hints ):
         return S.Zero
 
     @property
-    def _op_priority(self):
+    def _op_priority( self ):
         return 200
 
     @property
-    def mul_identity(self):
-        return SigmaI(self.name)
+    def mul_identity( self ):
+        return SigmaI( self.name )
 
-    def __mul__(self, other):
-        if isinstance(other, SigmaI):
+    def __mul__( self, other ):
+        if isinstance( other, SigmaI ):
             return self
-        return Mul(self,other)
+        return Mul( self, other )
 
-    def __pow__(self, other, *args, **kwargs):
-        if isinstance(self, SigmaI) or sympify(other) is S.Zero:
-            return(SigmaI(self.name))
+    def __pow__( self, other, *args, **kwargs ):
+        if isinstance( self, SigmaI ) or sympify( other ) is S.Zero:
+            return( SigmaI( self.name ) )
         else:
-            return Pow(self,other)
+            return Pow( self, other )
 
-    def _eval_power(self, e):
-        if isinstance(self, SigmaI):
+    def _eval_power( self, e ):
+        if isinstance( self, SigmaI ):
             return SigmaI
         elif e.is_Integer and e.is_positive:
-            if int(e) % 2:
+            if int( e ) % 2:
                 return self
             else:
-                return SigmaI(self.name)
+                return SigmaI( self.name )
 
-    def collect(self, syms, *args, **kwargs):
-        op_syms = list(filter(lambda x: isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
-        other_syms =  list(filter(lambda x: not isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
-        if len(op_syms):
-            expr = self._eval_collect(self, op_syms, *args, **kwargs)
-            if len(other_syms):
-                expr.collect(other_syms, *args, **kwargs)
-        elif len(other_syms):
-            return super().collect(other_syms, *args, **kwargs)
-        return(expr)
-
-    # @call_highest_priority
-    # def collect(self, *args, **kwargs):
-    #     raise AttributeError('In pauli.SigmaBaseOp.collect')
+    def collect( self, syms, *args, **kwargs ):
+        op_syms = list( filter( lambda x: isinstance( x, ( SigmaI, SigmaX, SigmaY, SigmaZ ) ), syms ) )
+        other_syms = list( filter( lambda x: not isinstance( x, ( SigmaI, SigmaX, SigmaY, SigmaZ ) ), syms ) )
+        if len( op_syms ):
+            expr = self._eval_collect( self, op_syms, *args, **kwargs )
+            if len( other_syms ):
+                expr.collect( other_syms, *args, **kwargs )
+        elif len( other_syms ):
+            return super().collect( other_syms, *args, **kwargs )
+        return( expr )
 
     @staticmethod
-    def _eval_collect(e, syms, *args, **kwargs):
+    def _eval_collect( e, syms, *args, **kwargs ):
         return qcollect_pauli( e, syms, *args, **kwargs )
 
 
-class SigmaI(SigmaOpBase, IdentityOperator):
+class SigmaI( SigmaOpBase, IdentityOperator ):
     """Pauli sigma Identity operator
 
     Parameters
@@ -126,60 +122,59 @@ class SigmaI(SigmaOpBase, IdentityOperator):
     [0,  1]])
     """
 
-    def __new__(cls, *args, **hints):
-        return SigmaOpBase.__new__(cls, *args)
+    def __new__( cls, *args, **hints ):
+        return SigmaOpBase.__new__( cls, *args )
 
-    def _eval_commutator_SigmaZ(self, other, **hints):
+    def _eval_commutator_SigmaZ( self, other, **hints ):
         return S.Zero
 
-    def _eval_commutator_SigmaX(self, other, **hints):
+    def _eval_commutator_SigmaX( self, other, **hints ):
         return S.Zero
 
-    def _eval_commutator_SigmaY(self, other, **hints):
+    def _eval_commutator_SigmaY( self, other, **hints ):
         return S.Zero
 
-    def _eval_commutator_SigmaI(self, other, **hints):
+    def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaI(self, other, **hints):
-        return 2*other
+    def _eval_anticommutator_SigmaI( self, other, **hints ):
+        return 2 * other
 
-    def _eval_anticommutator_SigmaX(self, other, **hints):
-        return 2*other
+    def _eval_anticommutator_SigmaX( self, other, **hints ):
+        return 2 * other
 
-    def _eval_anticommutator_SigmaY(self, other, **hints):
-        return 2*other
+    def _eval_anticommutator_SigmaY( self, other, **hints ):
+        return 2 * other
 
-    def _eval_anticommutator_SigmaZ(self, other, **hints):
-        return 2*other
+    def _eval_anticommutator_SigmaZ( self, other, **hints ):
+        return 2 * other
 
-    def _eval_adjoint(self):
+    def _eval_adjoint( self ):
         return self
 
-    def _print_contents_latex(self, printer, *args):
+    def _print_contents_latex( self, printer, *args ):
         if self.use_name:
-            return r'{\sigma_I^{(%s)}}' % str(self.name)
+            return r'{\sigma_I^{(%s)}}' % str( self.name )
         else:
             return r'{\sigma_I}'
 
-    def _print_contents(self, printer, *args):
+    def _print_contents( self, printer, *args ):
         return 'SigmaI()'
 
-    def _represent_default_basis(self, **options):
-        format = options.get('format', 'sympy')
+    def _represent_default_basis( self, **options ):
+        format = options.get( 'format', 'sympy' )
         if format == 'sympy':
-            return Matrix([[1, 0], [0, 1]])
+            return Matrix( [[1, 0], [0, 1]] )
         else:
-            raise NotImplementedError('Representation in format ' +
-                                      format + ' not implemented.')
+            raise NotImplementedError( 'Representation in format ' +
+                                      format + ' not implemented.' )
+
+    def simplify( self, *args, **kwargs ):
+        print( 'SigmaBase Simplify' )
+        super().simplify( self )
 
 
-    def simplify(self,*args,**kwargs):
-        print('SigmaBase Simplify')
-        super().simplify(self)
-
-
-class SigmaX(SigmaOpBase):
+class SigmaX( SigmaOpBase ):
     """Pauli sigma x operator
 
     Parameters
@@ -203,59 +198,58 @@ class SigmaX(SigmaOpBase):
     [1, 0]])
     """
 
-    def __new__(cls, *args, **hints):
-        return SigmaOpBase.__new__(cls, *args, **hints)
+    def __new__( cls, *args, **hints ):
+        return SigmaOpBase.__new__( cls, *args, **hints )
 
-    def _eval_commutator_SigmaY(self, other, **hints):
+    def _eval_commutator_SigmaY( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return 2 * I * SigmaZ(self.name)
+            return 2 * I * SigmaZ( self.name )
 
-    def _eval_commutator_SigmaZ(self, other, **hints):
+    def _eval_commutator_SigmaZ( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return - 2 * I * SigmaY(self.name)
+            return -2 * I * SigmaY( self.name )
 
-    def _eval_commutator_BosonOp(self, other, **hints):
+    def _eval_commutator_BosonOp( self, other, **hints ):
         return S.Zero
 
-    def _eval_commutator_SigmaI(self, other, **hints):
+    def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaI(self, other, **hints):
-        return 2*self
+    def _eval_anticommutator_SigmaI( self, other, **hints ):
+        return 2 * self
 
-    def _eval_anticommutator_SigmaY(self, other, **hints):
+    def _eval_anticommutator_SigmaY( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaZ(self, other, **hints):
+    def _eval_anticommutator_SigmaZ( self, other, **hints ):
         return S.Zero
 
-    def _eval_adjoint(self):
+    def _eval_adjoint( self ):
         return self
 
-    def _print_contents_latex(self, printer, *args):
+    def _print_contents_latex( self, printer, *args ):
         if self.use_name:
-            return r'{\sigma_x^{(%s)}}' % str(self.name)
+            return r'{\sigma_x^{(%s)}}' % str( self.name )
         else:
             return r'{\sigma_x}'
 
-    def _print_contents(self, printer, *args):
+    def _print_contents( self, printer, *args ):
         return 'SigmaX()'
 
-
-    def _represent_default_basis(self, **options):
-        format = options.get('format', 'sympy')
+    def _represent_default_basis( self, **options ):
+        format = options.get( 'format', 'sympy' )
         if format == 'sympy':
-            return Matrix([[0, 1], [1, 0]])
+            return Matrix( [[0, 1], [1, 0]] )
         else:
-            raise NotImplementedError('Representation in format ' +
-                                      format + ' not implemented.')
+            raise NotImplementedError( 'Representation in format ' +
+                                      format + ' not implemented.' )
 
 
-class SigmaY(SigmaOpBase):
+class SigmaY( SigmaOpBase ):
     """Pauli sigma y operator
 
     Parameters
@@ -279,56 +273,55 @@ class SigmaY(SigmaOpBase):
     [I,  0]])
     """
 
-    def __new__(cls, *args, **hints):
-        return SigmaOpBase.__new__(cls, *args)
+    def __new__( cls, *args, **hints ):
+        return SigmaOpBase.__new__( cls, *args )
 
-    def _eval_commutator_SigmaZ(self, other, **hints):
+    def _eval_commutator_SigmaZ( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return 2 * I * SigmaX(self.name)
+            return 2 * I * SigmaX( self.name )
 
-    def _eval_commutator_SigmaX(self, other, **hints):
+    def _eval_commutator_SigmaX( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return - 2 * I * SigmaZ(self.name)
+            return -2 * I * SigmaZ( self.name )
 
-    def _eval_commutator_SigmaI(self, other, **hints):
+    def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaI(self, other, **hints):
-        return 2*self
+    def _eval_anticommutator_SigmaI( self, other, **hints ):
+        return 2 * self
 
-    def _eval_anticommutator_SigmaX(self, other, **hints):
+    def _eval_anticommutator_SigmaX( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaZ(self, other, **hints):
+    def _eval_anticommutator_SigmaZ( self, other, **hints ):
         return S.Zero
 
-    def _eval_adjoint(self):
+    def _eval_adjoint( self ):
         return self
 
-    def _print_contents_latex(self, printer, *args):
+    def _print_contents_latex( self, printer, *args ):
         if self.use_name:
-            return r'{\sigma_y^{(%s)}}' % str(self.name)
+            return r'{\sigma_y^{(%s)}}' % str( self.name )
         else:
             return r'{\sigma_y}'
 
-    def _print_contents(self, printer, *args):
+    def _print_contents( self, printer, *args ):
         return 'SigmaY()'
 
-
-    def _represent_default_basis(self, **options):
-        format = options.get('format', 'sympy')
+    def _represent_default_basis( self, **options ):
+        format = options.get( 'format', 'sympy' )
         if format == 'sympy':
-            return Matrix([[0, -I], [I, 0]])
+            return Matrix( [[0, -I], [I, 0]] )
         else:
-            raise NotImplementedError('Representation in format ' +
-                                      format + ' not implemented.')
+            raise NotImplementedError( 'Representation in format ' +
+                                      format + ' not implemented.' )
 
 
-class SigmaZ(SigmaOpBase):
+class SigmaZ( SigmaOpBase ):
     """Pauli sigma z operator
 
     Parameters
@@ -352,56 +345,55 @@ class SigmaZ(SigmaOpBase):
     [0, -1]])
     """
 
-    def __new__(cls, *args, **hints):
-        return SigmaOpBase.__new__(cls, *args)
+    def __new__( cls, *args, **hints ):
+        return SigmaOpBase.__new__( cls, *args )
 
-    def _eval_commutator_SigmaX(self, other, **hints):
+    def _eval_commutator_SigmaX( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return 2 * I * SigmaY(self.name)
+            return 2 * I * SigmaY( self.name )
 
-    def _eval_commutator_SigmaY(self, other, **hints):
+    def _eval_commutator_SigmaY( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return - 2 * I * SigmaX(self.name)
+            return -2 * I * SigmaX( self.name )
 
-    def _eval_commutator_SigmaI(self, other, **hints):
+    def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaI(self, other, **hints):
-        return 2*self
+    def _eval_anticommutator_SigmaI( self, other, **hints ):
+        return 2 * self
 
-    def _eval_anticommutator_SigmaX(self, other, **hints):
+    def _eval_anticommutator_SigmaX( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaY(self, other, **hints):
+    def _eval_anticommutator_SigmaY( self, other, **hints ):
         return S.Zero
 
-    def _eval_adjoint(self):
+    def _eval_adjoint( self ):
         return self
 
-    def _print_contents_latex(self, printer, *args):
+    def _print_contents_latex( self, printer, *args ):
         if self.use_name:
-            return r'{\sigma_z^{(%s)}}' % str(self.name)
+            return r'{\sigma_z^{(%s)}}' % str( self.name )
         else:
             return r'{\sigma_z}'
 
-    def _print_contents(self, printer, *args):
+    def _print_contents( self, printer, *args ):
         return 'SigmaZ()'
 
-
-    def _represent_default_basis(self, **options):
-        format = options.get('format', 'sympy')
+    def _represent_default_basis( self, **options ):
+        format = options.get( 'format', 'sympy' )
         if format == 'sympy':
-            return Matrix([[1, 0], [0, -1]])
+            return Matrix( [[1, 0], [0, -1]] )
         else:
-            raise NotImplementedError('Representation in format ' +
-                                      format + ' not implemented.')
+            raise NotImplementedError( 'Representation in format ' +
+                                      format + ' not implemented.' )
 
 
-class SigmaMinus(SigmaOpBase):
+class SigmaMinus( SigmaOpBase ):
     """Pauli sigma minus operator
 
     Parameters
@@ -427,71 +419,71 @@ class SigmaMinus(SigmaOpBase):
     [1, 0]])
     """
 
-    def __new__(cls, *args, **hints):
-        return SigmaOpBase.__new__(cls, *args)
+    def __new__( cls, *args, **hints ):
+        return SigmaOpBase.__new__( cls, *args )
 
-    def _eval_commutator_SigmaI(self, other, **hints):
+    def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
 
-    def _eval_commutator_SigmaX(self, other, **hints):
+    def _eval_commutator_SigmaX( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return -SigmaZ(self.name)
+            return -SigmaZ( self.name )
 
-    def _eval_commutator_SigmaY(self, other, **hints):
+    def _eval_commutator_SigmaY( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return I * SigmaZ(self.name)
+            return I * SigmaZ( self.name )
 
-    def _eval_commutator_SigmaZ(self, other, **hints):
+    def _eval_commutator_SigmaZ( self, other, **hints ):
         return 2 * self
 
-    def _eval_commutator_SigmaMinus(self, other, **hints):
-        return SigmaZ(self.name)
+    def _eval_commutator_SigmaMinus( self, other, **hints ):
+        return SigmaZ( self.name )
 
-    def _eval_anticommutator_SigmaI(self, other, **hints):
-        return 2*self
+    def _eval_anticommutator_SigmaI( self, other, **hints ):
+        return 2 * self
 
-    def _eval_anticommutator_SigmaZ(self, other, **hints):
+    def _eval_anticommutator_SigmaZ( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaX(self, other, **hints):
+    def _eval_anticommutator_SigmaX( self, other, **hints ):
         return S.One
 
-    def _eval_anticommutator_SigmaY(self, other, **hints):
+    def _eval_anticommutator_SigmaY( self, other, **hints ):
         return I * S.NegativeOne
 
-    def _eval_anticommutator_SigmaPlus(self, other, **hints):
+    def _eval_anticommutator_SigmaPlus( self, other, **hints ):
         return S.One
 
-    def _eval_adjoint(self):
-        return SigmaPlus(self.name)
+    def _eval_adjoint( self ):
+        return SigmaPlus( self.name )
 
-    def _eval_power(self, e):
+    def _eval_power( self, e ):
         if e.is_Integer and e.is_positive:
             return S.Zero
 
-    def _print_contents_latex(self, printer, *args):
+    def _print_contents_latex( self, printer, *args ):
         if self.use_name:
-            return r'{\sigma_-^{(%s)}}' % str(self.name)
+            return r'{\sigma_-^{(%s)}}' % str( self.name )
         else:
             return r'{\sigma_-}'
 
-    def _print_contents(self, printer, *args):
+    def _print_contents( self, printer, *args ):
         return 'SigmaMinus()'
 
-    def _represent_default_basis(self, **options):
-        format = options.get('format', 'sympy')
+    def _represent_default_basis( self, **options ):
+        format = options.get( 'format', 'sympy' )
         if format == 'sympy':
-            return Matrix([[0, 0], [1, 0]])
+            return Matrix( [[0, 0], [1, 0]] )
         else:
-            raise NotImplementedError('Representation in format ' +
-                                      format + ' not implemented.')
+            raise NotImplementedError( 'Representation in format ' +
+                                      format + ' not implemented.' )
 
 
-class SigmaPlus(SigmaOpBase):
+class SigmaPlus( SigmaOpBase ):
     """Pauli sigma plus operator
 
     Parameters
@@ -517,77 +509,77 @@ class SigmaPlus(SigmaOpBase):
     [0, 0]])
     """
 
-    def __new__(cls, *args, **hints):
-        return SigmaOpBase.__new__(cls, *args)
+    def __new__( cls, *args, **hints ):
+        return SigmaOpBase.__new__( cls, *args )
 
-    def _eval_commutator_SigmaI(self, other, **hints):
+    def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
 
-    def _eval_commutator_SigmaX(self, other, **hints):
+    def _eval_commutator_SigmaX( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return SigmaZ(self.name)
+            return SigmaZ( self.name )
 
-    def _eval_commutator_SigmaY(self, other, **hints):
+    def _eval_commutator_SigmaY( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
-            return I * SigmaZ(self.name)
+            return I * SigmaZ( self.name )
 
-    def _eval_commutator_SigmaZ(self, other, **hints):
+    def _eval_commutator_SigmaZ( self, other, **hints ):
         if self.name != other.name:
             return S.Zero
         else:
             return -2 * self
 
-    def _eval_commutator_SigmaMinus(self, other, **hints):
-        return SigmaZ(self.name)
+    def _eval_commutator_SigmaMinus( self, other, **hints ):
+        return SigmaZ( self.name )
 
-    def _eval_anticommutator_SigmaI(self, other, **hints):
-        return 2*self
+    def _eval_anticommutator_SigmaI( self, other, **hints ):
+        return 2 * self
 
-    def _eval_anticommutator_SigmaZ(self, other, **hints):
+    def _eval_anticommutator_SigmaZ( self, other, **hints ):
         return S.Zero
 
-    def _eval_anticommutator_SigmaX(self, other, **hints):
+    def _eval_anticommutator_SigmaX( self, other, **hints ):
         return S.One
 
-    def _eval_anticommutator_SigmaY(self, other, **hints):
+    def _eval_anticommutator_SigmaY( self, other, **hints ):
         return I
 
-    def _eval_anticommutator_SigmaMinus(self, other, **hints):
+    def _eval_anticommutator_SigmaMinus( self, other, **hints ):
         return S.One
 
-    def _eval_adjoint(self):
-        return SigmaMinus(self.name)
+    def _eval_adjoint( self ):
+        return SigmaMinus( self.name )
 
-    def _eval_mul(self, other):
+    def _eval_mul( self, other ):
         return self * other
 
-    def _eval_power(self, e):
+    def _eval_power( self, e ):
         if e.is_Integer and e.is_positive:
             return S.Zero
 
-    def _print_contents_latex(self, printer, *args):
+    def _print_contents_latex( self, printer, *args ):
         if self.use_name:
-            return r'{\sigma_+^{(%s)}}' % str(self.name)
+            return r'{\sigma_+^{(%s)}}' % str( self.name )
         else:
             return r'{\sigma_+}'
 
-    def _print_contents(self, printer, *args):
+    def _print_contents( self, printer, *args ):
         return 'SigmaPlus()'
 
-    def _represent_default_basis(self, **options):
-        format = options.get('format', 'sympy')
+    def _represent_default_basis( self, **options ):
+        format = options.get( 'format', 'sympy' )
         if format == 'sympy':
-            return Matrix([[0, 1], [0, 0]])
+            return Matrix( [[0, 1], [0, 0]] )
         else:
-            raise NotImplementedError('Representation in format ' +
-                                      format + ' not implemented.')
+            raise NotImplementedError( 'Representation in format ' +
+                                      format + ' not implemented.' )
 
 
-class SigmaZKet(Ket):
+class SigmaZKet( Ket ):
     """Ket for a two-level system quantum system.
 
     Parameters
@@ -598,64 +590,64 @@ class SigmaZKet(Ket):
 
     """
 
-    def __new__(cls, n):
-        if n not in (0, 1):
-            raise ValueError("n must be 0 or 1")
-        return Ket.__new__(cls, n)
+    def __new__( cls, n ):
+        if n not in ( 0, 1 ):
+            raise ValueError( "n must be 0 or 1" )
+        return Ket.__new__( cls, n )
 
     @property
-    def n(self):
+    def n( self ):
         return self.label[0]
 
     @classmethod
-    def dual_class(self):
+    def dual_class( self ):
         return SigmaZBra
 
     @classmethod
-    def _eval_hilbert_space(cls, label):
-        return ComplexSpace(2)
+    def _eval_hilbert_space( cls, label ):
+        return ComplexSpace( 2 )
 
-    def _eval_innerproduct_SigmaZBra(self, bra, **hints):
-        return KroneckerDelta(self.n, bra.n)
+    def _eval_innerproduct_SigmaZBra( self, bra, **hints ):
+        return KroneckerDelta( self.n, bra.n )
 
-    def _apply_from_right_to_SigmaZ(self, op, **options):
+    def _apply_from_right_to_SigmaZ( self, op, **options ):
         if self.n == 0:
             return self
         else:
             return S.NegativeOne * self
 
-    def _apply_from_right_to_SigmaI(self, op, **options):
-        print(f' apply_from_right_to_SigmaI {op}')
+    def _apply_from_right_to_SigmaI( self, op, **options ):
+        print( f' apply_from_right_to_SigmaI {op}' )
         return self
 
-    def _apply_from_right_to_SigmaX(self, op, **options):
-        return SigmaZKet(1) if self.n == 0 else SigmaZKet(0)
+    def _apply_from_right_to_SigmaX( self, op, **options ):
+        return SigmaZKet( 1 ) if self.n == 0 else SigmaZKet( 0 )
 
-    def _apply_from_right_to_SigmaY(self, op, **options):
-        return I * SigmaZKet(1) if self.n == 0 else (-I) * SigmaZKet(0)
+    def _apply_from_right_to_SigmaY( self, op, **options ):
+        return I * SigmaZKet( 1 ) if self.n == 0 else ( -I ) * SigmaZKet( 0 )
 
-    def _apply_from_right_to_SigmaMinus(self, op, **options):
+    def _apply_from_right_to_SigmaMinus( self, op, **options ):
         if self.n == 0:
-            return SigmaZKet(1)
+            return SigmaZKet( 1 )
         else:
             return S.Zero
 
-    def _apply_from_right_to_SigmaPlus(self, op, **options):
+    def _apply_from_right_to_SigmaPlus( self, op, **options ):
         if self.n == 0:
             return S.Zero
         else:
-            return SigmaZKet(0)
+            return SigmaZKet( 0 )
 
-    def _represent_default_basis(self, **options):
-        format = options.get('format', 'sympy')
+    def _represent_default_basis( self, **options ):
+        format = options.get( 'format', 'sympy' )
         if format == 'sympy':
-            return Matrix([[1], [0]]) if self.n == 0 else Matrix([[0], [1]])
+            return Matrix( [[1], [0]] ) if self.n == 0 else Matrix( [[0], [1]] )
         else:
-            raise NotImplementedError('Representation in format ' +
-                                      format + ' not implemented.')
+            raise NotImplementedError( 'Representation in format ' +
+                                      format + ' not implemented.' )
 
 
-class SigmaZBra(Bra):
+class SigmaZBra( Bra ):
     """Bra for a two-level quantum system.
 
     Parameters
@@ -666,161 +658,161 @@ class SigmaZBra(Bra):
 
     """
 
-    def __new__(cls, n):
-        if n not in (0, 1):
-            raise ValueError("n must be 0 or 1")
-        return Bra.__new__(cls, n)
+    def __new__( cls, n ):
+        if n not in ( 0, 1 ):
+            raise ValueError( "n must be 0 or 1" )
+        return Bra.__new__( cls, n )
 
     @property
-    def n(self):
+    def n( self ):
         return self.label[0]
 
     @classmethod
-    def dual_class(self):
+    def dual_class( self ):
         return SigmaZKet
 
 
-def _qsimplify_pauli_product(a, b):
+def _qsimplify_pauli_product( a, b ):
     """
     Internal helper function for simplifying products of Pauli operators.
     """
-    if not (isinstance(a, SigmaOpBase) and isinstance(b, SigmaOpBase)):
-        return Mul(a, b)
+    if not ( isinstance( a, SigmaOpBase ) and isinstance( b, SigmaOpBase ) ):
+        return Mul( a, b )
 
     if a.name != b.name:
         # Pauli matrices with different labels commute; sort by name
         if a.name < b.name:
-            return Mul(a, b)
+            return Mul( a, b )
         else:
-            return Mul(b, a)
+            return Mul( b, a )
 
-    elif isinstance(a, SigmaI):
+    elif isinstance( a, SigmaI ):
 
-        if isinstance(b, SigmaI):
-            return SigmaI(a.name)
+        if isinstance( b, SigmaI ):
+            return SigmaI( a.name )
 
-        if isinstance(b, SigmaX):
-            return SigmaX(a.name)
+        if isinstance( b, SigmaX ):
+            return SigmaX( a.name )
 
-        if isinstance(b, SigmaY):
-            return SigmaY(a.name)
+        if isinstance( b, SigmaY ):
+            return SigmaY( a.name )
 
-        if isinstance(b, SigmaZ):
-            return SigmaZ(a.name)
+        if isinstance( b, SigmaZ ):
+            return SigmaZ( a.name )
 
-        if isinstance(b, SigmaMinus):
-            return SigmaMinus(a.name)
+        if isinstance( b, SigmaMinus ):
+            return SigmaMinus( a.name )
 
-        if isinstance(b, SigmaPlus):
-            return SigmaPlus(a.name)
+        if isinstance( b, SigmaPlus ):
+            return SigmaPlus( a.name )
 
-    elif isinstance(a, SigmaX):
+    elif isinstance( a, SigmaX ):
 
-        if isinstance(b, SigmaI):
-            return SigmaX(a.name)
+        if isinstance( b, SigmaI ):
+            return SigmaX( a.name )
 
-        if isinstance(b, SigmaX):
-            return SigmaI(a.name)
+        if isinstance( b, SigmaX ):
+            return SigmaI( a.name )
 
-        if isinstance(b, SigmaY):
-            return I * SigmaZ(a.name)
+        if isinstance( b, SigmaY ):
+            return I * SigmaZ( a.name )
 
-        if isinstance(b, SigmaZ):
-            return - I * SigmaY(a.name)
+        if isinstance( b, SigmaZ ):
+            return -I * SigmaY( a.name )
 
-        if isinstance(b, SigmaMinus):
-            return (SigmaI(a.name) + SigmaZ(a.name))/2
+        if isinstance( b, SigmaMinus ):
+            return ( SigmaI( a.name ) + SigmaZ( a.name ) ) / 2
 
-        if isinstance(b, SigmaPlus):
-            return (SigmaI(a.name) - SigmaZ(a.name))/2
+        if isinstance( b, SigmaPlus ):
+            return ( SigmaI( a.name ) - SigmaZ( a.name ) ) / 2
 
-    elif isinstance(a, SigmaY):
+    elif isinstance( a, SigmaY ):
 
-        if isinstance(b, SigmaI):
-            return SigmaY(a.name)
+        if isinstance( b, SigmaI ):
+            return SigmaY( a.name )
 
-        if isinstance(b, SigmaX):
-            return - I * SigmaZ(a.name)
+        if isinstance( b, SigmaX ):
+            return -I * SigmaZ( a.name )
 
-        if isinstance(b, SigmaY):
-            return SigmaI(a.name)
+        if isinstance( b, SigmaY ):
+            return SigmaI( a.name )
 
-        if isinstance(b, SigmaZ):
-            return I * SigmaX(a.name)
+        if isinstance( b, SigmaZ ):
+            return I * SigmaX( a.name )
 
-        if isinstance(b, SigmaMinus):
-            return -I * (SigmaI(a.name) + SigmaZ(a.name))/2
+        if isinstance( b, SigmaMinus ):
+            return -I * ( SigmaI( a.name ) + SigmaZ( a.name ) ) / 2
 
-        if isinstance(b, SigmaPlus):
-            return I * (SigmaI(a.name) - SigmaZ(a.name))/2
+        if isinstance( b, SigmaPlus ):
+            return I * ( SigmaI( a.name ) - SigmaZ( a.name ) ) / 2
 
-    elif isinstance(a, SigmaZ):
+    elif isinstance( a, SigmaZ ):
 
-        if isinstance(b, SigmaI):
-            return SigmaZ(a.name)
+        if isinstance( b, SigmaI ):
+            return SigmaZ( a.name )
 
-        if isinstance(b, SigmaX):
-            return I * SigmaY(a.name)
+        if isinstance( b, SigmaX ):
+            return I * SigmaY( a.name )
 
-        if isinstance(b, SigmaY):
-            return - I * SigmaX(a.name)
+        if isinstance( b, SigmaY ):
+            return -I * SigmaX( a.name )
 
-        if isinstance(b, SigmaZ):
-            return SigmaI(a.name)
+        if isinstance( b, SigmaZ ):
+            return SigmaI( a.name )
 
-        if isinstance(b, SigmaMinus):
-            return - SigmaMinus(a.name)
+        if isinstance( b, SigmaMinus ):
+            return -SigmaMinus( a.name )
 
-        if isinstance(b, SigmaPlus):
-            return SigmaPlus(a.name)
+        if isinstance( b, SigmaPlus ):
+            return SigmaPlus( a.name )
 
-    elif isinstance(a, SigmaMinus):
+    elif isinstance( a, SigmaMinus ):
 
-        if isinstance(b, SigmaI):
-            return SigmaMinus(a.name)
+        if isinstance( b, SigmaI ):
+            return SigmaMinus( a.name )
 
-        if isinstance(b, SigmaX):
-            return (SigmaI(a.name) - SigmaZ(a.name))/2
+        if isinstance( b, SigmaX ):
+            return ( SigmaI( a.name ) - SigmaZ( a.name ) ) / 2
 
-        if isinstance(b, SigmaY):
-            return - I * (SigmaI(a.name) - SigmaZ(a.name))/2
+        if isinstance( b, SigmaY ):
+            return -I * ( SigmaI( a.name ) - SigmaZ( a.name ) ) / 2
 
-        if isinstance(b, SigmaZ):
+        if isinstance( b, SigmaZ ):
             # (SigmaX(a.name) - I * SigmaY(a.name))/2
-            return SigmaMinus(b.name)
+            return SigmaMinus( b.name )
 
-        if isinstance(b, SigmaMinus):
+        if isinstance( b, SigmaMinus ):
             return S.Zero
 
-        if isinstance(b, SigmaPlus):
-            return (SigmaI(a.name) - SigmaZ(a.name))/2
+        if isinstance( b, SigmaPlus ):
+            return ( SigmaI( a.name ) - SigmaZ( a.name ) ) / 2
 
-    elif isinstance(a, SigmaPlus):
+    elif isinstance( a, SigmaPlus ):
 
-        if isinstance(b, SigmaI):
-            return SigmaPlus(a.name)
+        if isinstance( b, SigmaI ):
+            return SigmaPlus( a.name )
 
-        if isinstance(b, SigmaX):
-            return (S.SigmaI(a.name) + SigmaZ(a.name))/2
+        if isinstance( b, SigmaX ):
+            return ( S.SigmaI( a.name ) + SigmaZ( a.name ) ) / 2
 
-        if isinstance(b, SigmaY):
-            return I * (SigmaI(a.name) + SigmaZ(a.name))/2
+        if isinstance( b, SigmaY ):
+            return I * ( SigmaI( a.name ) + SigmaZ( a.name ) ) / 2
 
-        if isinstance(b, SigmaZ):
-            #-(SigmaX(a.name) + I * SigmaY(a.name))/2
-            return -SigmaPlus(a.name)
+        if isinstance( b, SigmaZ ):
+            # -(SigmaX(a.name) + I * SigmaY(a.name))/2
+            return -SigmaPlus( a.name )
 
-        if isinstance(b, SigmaMinus):
-            return (SigmaI(a.name) + SigmaZ(a.name))/2
+        if isinstance( b, SigmaMinus ):
+            return ( SigmaI( a.name ) + SigmaZ( a.name ) ) / 2
 
-        if isinstance(b, SigmaPlus):
+        if isinstance( b, SigmaPlus ):
             return S.Zero
 
     else:
         return a * b
 
 
-def qsimplify_pauli(e):
+def qsimplify_pauli( e ):
     """
     Simplify an expression that includes products of pauli operators.
 
@@ -842,40 +834,40 @@ def qsimplify_pauli(e):
     >>> qsimplify_pauli(sx * sy)
     I*SigmaZ()
     """
-    if isinstance(e, Operator):
+    if isinstance( e, Operator ):
         return e
 
-    if isinstance(e, (sympy.core.add.Add, sympy.core.power.Pow, exp)):
-        t = type(e)
-        return t(*(qsimplify_pauli(arg) for arg in e.args))
+    if isinstance( e, ( sympy.core.add.Add, sympy.core.power.Pow, exp ) ):
+        t = type( e )
+        return t( *( qsimplify_pauli( arg ) for arg in e.args ) )
 
-    if isinstance(e, sympy.core.Mul):
+    if isinstance( e, sympy.core.Mul ):
 
         c, nc = e.args_cnc()
 
         nc_s = []
         while nc:
-            curr = nc.pop(0)
+            curr = nc.pop( 0 )
 
-            while (len(nc) and
-                   isinstance(curr, SigmaOpBase) and
-                   isinstance(nc[0], SigmaOpBase) and
-                   curr.name == nc[0].name):
+            while ( len( nc ) and
+                   isinstance( curr, SigmaOpBase ) and
+                   isinstance( nc[0], SigmaOpBase ) and
+                   curr.name == nc[0].name ):
 
-                x = nc.pop(0)
-                y = _qsimplify_pauli_product(curr, x)
+                x = nc.pop( 0 )
+                y = _qsimplify_pauli_product( curr, x )
                 c1, nc1 = y.args_cnc()
-                curr = Mul(*nc1)
+                curr = Mul( *nc1 )
                 c = c + c1
 
-            nc_s.append(curr)
+            nc_s.append( curr )
 
-        return Mul(*c) * Mul(*nc_s)
+        return Mul( *c ) * Mul( *nc_s )
 
     return e
 
 
-def qcollect_pauli(e,ops=None, *args, **kwargs):
+def qcollect_pauli( e, ops=None, *args, **kwargs ):
     """
     Collect like terms in an expression containing the non-commutaive pauli operators.
 
@@ -901,49 +893,49 @@ def qcollect_pauli(e,ops=None, *args, **kwargs):
     >>> qcollect_pauli(a*sx + b*sx + c*sy + d*sy)
     (a+b)*SigmaX() + (c+d)*SigmaY()
     """
-    if isinstance(e, (Operator, Symbol)):
+    if isinstance( e, ( Operator, Symbol ) ):
         return e
 
-    if not isinstance(e, sympy.core.add.Add):
-        if isinstance(e, (Expr, Function)):
-            args=[]
+    if not isinstance( e, sympy.core.add.Add ):
+        if isinstance( e, ( Expr, Function ) ):
+            args = []
             for arg in e.args:
-                args.append(qcollect_pauli(arg,ops))
-            return type(e)(*args)
+                args.append( qcollect_pauli( arg, ops ) )
+            return type( e )( *args )
         else:
             return e
 
     all_ops = [SigmaI(), SigmaX(), SigmaY(), SigmaZ(), SigmaPlus(), SigmaMinus()]
-    if ops is None or len(ops) == 0:
+    if ops is None or len( ops ) == 0:
         ops = all_ops
 
     for op in ops:
         if not op in all_ops:
-            raise ValueError(f'Operators to collect must be from {all_ops}')
+            raise ValueError( f'Operators to collect must be from {all_ops}' )
 
-    coefs = [ [] for _ in range(len(ops))]
+    coefs = [ [] for _ in range( len( ops ) )]
     args = []
     for arg in e.args:
-        if isinstance(arg,sympy.core.Add):
-            args.append(qcollect_pauli(arg, ops))
-        elif isinstance(arg,sympy.core.Mul):
+        if isinstance( arg, sympy.core.Add ):
+            args.append( qcollect_pauli( arg, ops ) )
+        elif isinstance( arg, sympy.core.Mul ):
             if arg.args[-1] in ops:
-                idx = ops.index(arg.args[-1])
-                if len(arg.args[:-1]) > 1:
-                    coefs[idx].append(Mul(*arg.args[:-1]))
-                elif len(arg.args[:-1]):
-                        coefs[idx].append(arg.args[:-1][0])
+                idx = ops.index( arg.args[-1] )
+                if len( arg.args[:-1] ) > 1:
+                    coefs[idx].append( Mul( *arg.args[:-1] ) )
+                elif len( arg.args[:-1] ):
+                        coefs[idx].append( arg.args[:-1][0] )
                 else:
-                    coefs[idx].append(S.One)
+                    coefs[idx].append( S.One )
             else:
-                args.append(arg)
+                args.append( arg )
         else:
-            args.append(arg)
+            args.append( arg )
 
-    for idx in range(len(ops)):
-        if len(coefs[idx]) == 1:
-            args.append(Mul(coefs[idx][0],ops[idx]))
-        elif len(coefs[idx]):
-            args.append(Mul(Add(*coefs[idx]),ops[idx]))
+    for idx in range( len( ops ) ):
+        if len( coefs[idx] ) == 1:
+            args.append( Mul( coefs[idx][0], ops[idx] ) )
+        elif len( coefs[idx] ):
+            args.append( Mul( Add( *coefs[idx] ), ops[idx] ) )
 
-    return Add(*args)
+    return Add( *args )
