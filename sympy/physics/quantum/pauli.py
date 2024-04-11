@@ -17,8 +17,8 @@ import sympy.core.power
 
 from sympy import sympify
 from sympy import Symbol
-from sympy.core import Expr, Function
-from .core import Add, Mul, Pow, qCore
+from sympy.core import Expr, Function, expand as core_expand
+from .qcore import Add, Mul, Pow, QCore
 from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
@@ -26,6 +26,7 @@ from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.core.decorators import call_highest_priority
 
 __all__ = [
     'SigmaI', 'SigmaX', 'SigmaY', 'SigmaZ', 'SigmaMinus', 'SigmaPlus', 'SigmaZKet',
@@ -33,7 +34,7 @@ __all__ = [
 ]
 
 
-class SigmaOpBase(qCore, Operator):
+class SigmaOpBase(QCore, Operator):
     """Pauli sigma operator, base class"""
     @property
     def name(self):
@@ -81,20 +82,24 @@ class SigmaOpBase(qCore, Operator):
             else:
                 return SigmaI(self.name)
 
-    def collect(e, syms, *args, **kwargs):
+    def collect(self, syms, *args, **kwargs):
         op_syms = list(filter(lambda x: isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
         other_syms =  list(filter(lambda x: not isinstance(x,(SigmaI, SigmaX, SigmaY, SigmaZ)), syms))
         if len(op_syms):
-            expr = qcollect_pauli(e, op_syms, *args, **kwargs)
+            expr = self._eval_collect(self, op_syms, *args, **kwargs)
             if len(other_syms):
                 expr.collect(other_syms, *args, **kwargs)
         elif len(other_syms):
             return super().collect(other_syms, *args, **kwargs)
         return(expr)
 
-    @property
-    def _eval_collect(self):
-        return qcollect_pauli
+    # @call_highest_priority
+    # def collect(self, *args, **kwargs):
+    #     raise AttributeError('In pauli.SigmaBaseOp.collect')
+
+    @staticmethod
+    def _eval_collect(e, syms, *args, **kwargs):
+        return qcollect_pauli( e, syms, *args, **kwargs )
 
 
 class SigmaI(SigmaOpBase, IdentityOperator):

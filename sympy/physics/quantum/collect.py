@@ -4,8 +4,8 @@
     Explanation
     ===========
 
-    This function extends core collect function by allowing the collection
-    of additive terms of an expression with respect non-commutative symbols.
+    This function extends the sympy.core.radsimp.collect function to allow the
+     collection of additive terms of an expression with respect non-commutative symbols.
 
     A non-commutative operator that provides an _eval_collect method will
     be collected first and removed from the list of symbols to be collected.
