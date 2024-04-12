@@ -6,7 +6,7 @@
         3. expand() from returning core Add, Mul or Pow class
 """
 import sympy
-from sympy import sympify
+from sympy import sympify, simplify
 from sympy.core.singleton import S
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.core.decorators import call_highest_priority
@@ -26,7 +26,41 @@ __all__ = [
 ]
 
 
+def _map_QCore( e, deep=True ):
+    """ Restore correct class for any expressions containing core expressions """
+    if hasattr( e, 'args' ) and not isinstance( e, QCore ):
+        if deep:
+            sargs = [ _map_QCore( x, deep=deep ) for x in e.args ]
+        else:
+            sargs = e.args
+        if isinstance( e, sympy.core.add.Add ):
+            return Add( *sargs )
+        if isinstance( e, sympy.core.mul.Mul ):
+            return Mul( *sargs )
+        if isinstance( e, sympy.core.power.Pow ):
+            return Pow( *sargs )
+    return e
+
+
+def _get_eval_simplify( args, deep=True ):
+    """ Collect simplify methods for arguments """
+    sfuncs = {}
+    for arg in args:
+        if isinstance( arg, ( Add, Mul, Pow ) ):
+            afuncs = _get_eval_simplify( arg.args )
+            for sfunc in afuncs:
+                sfuncs[sfunc] = 1
+        elif isinstance( arg, QCore ) and hasattr( arg, '_eval_simplify' ):
+            sfuncs[arg._eval_simplify] = 1
+    return sfuncs.keys()
+
+
 class QCore( Expr ):
+
+    @property
+    def __sympy__( self ):
+        # Prevents expand from sympifying the expression and loosing the core types
+        return True
 
     @property
     def _op_priority( self ):
@@ -51,15 +85,58 @@ class QCore( Expr ):
     def collect( self, syms, *args, **kwargs ):
         return collect( self, syms, *args, **kwargs )
 
+    def expand( self, *args, **kwargs ):
+        return super().expand( *args, **kwargs )
+
+    def _eval_expand_add( self, *args, **kwargs ):
+        if hasattr( super(), '_eval_expand_add' ):
+            return _map_QCore( super()._eval_expand_mul( *args, **kwargs ) )
+        return self
+
+    def _eval_expand_mul( self, *args, **kwargs ):
+        if hasattr( super(), '_eval_expand_mul' ):
+            return _map_QCore( super()._eval_expand_mul( *args, **kwargs ) )
+        return self
+
+    def _eval_expand_power_base( self, *args, **kwargs ):
+        if hasattr( super(), '_eval_expand_power_base' ):
+            return _map_QCore( super()._eval_expand_power_base( *args, **kwargs ) )
+        return self
+
+    def _eval_expand_power_exp( self, *args, **kwargs ):
+        if hasattr( super(), '_eval_expand_power_exp' ):
+            return _map_QCore( super()._eval_expand_power_exp( *args, **kwargs ) )
+        return self
+
+    def simplify( self, *args, **kwargs ):
+        return self._eval_simplify( *args, **kwargs )
+
+    def _eval_simplify( self, *args, **kwargs ):
+        expr = self
+        if hasattr( self, 'args' ):
+            sfuncs = _get_eval_simplify( self.args, deep=True )
+            for sfunc in sfuncs:
+                expr = sfunc( expr, *args, **kwargs )
+
+        # Avoid infinite recursion with _eval_simplify
+        if isinstance( expr, Add ):
+            expr = sympy.core.add.Add( *expr.args )
+        elif isinstance( expr, Mul ):
+            expr = sympy.core.mul.Mul( *expr.args )
+        elif isinstance( expr, Pow ):
+            expr = sympy.core.power.Pow( *expr.args )
+
+        expr = simplify( expr, *args, **kwargs )
+        expr = _map_QCore( expr )
+
+        return expr
+
 
 class Add( QCore, sympy.core.add.Add ):
 
     @property
     def _op_priority( self ):
         return 105
-
-    def _eval_expand_add( self, *args, **kwargs ):
-        return super()._eval_expand_add( *args, **kwargs )
 
     # Note from sympy.core.basic:
     # ===========================
@@ -90,9 +167,6 @@ class Mul( QCore, sympy.core.mul.Mul ):
             return p._eval_expand_power_base()
         return p
 
-    def _eval_expand_mul( self, *args, **kwargs ):
-        return super()._eval_expand_mul( *args, **kwargs )
-
     # Note from sympy.core.basic:
     # ===========================
     #     If a class that overrides __eq__() needs to retain the
@@ -114,12 +188,6 @@ class Pow( QCore, sympy.core.power.Pow ):
     @property
     def _op_priority( self ):
         return 115
-
-    def _eval_expand_power_base( self, *args, **kwargs ):
-        return super()._eval_expand_power_base( *args, **kwargs )
-
-    def _eval_expand_power_exp( self, *args, **kwargs ):
-        return super()._eval_expand_power_base( *args, **kwargs )
 
     def __new__( cls, *args, **kwargs ):
         if len( args ) > 1 and sympify( args[1] ) is S.Zero:

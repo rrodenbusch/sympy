@@ -41,6 +41,10 @@ class SigmaOpBase( QCore, Operator ):
         return self.args[0]
 
     @property
+    def _eval_simplify(self ):
+        return qsimplify_pauli
+
+    @property
     def use_name( self ):
         return bool( self.args[0] ) is not False
 
@@ -96,6 +100,18 @@ class SigmaOpBase( QCore, Operator ):
     @staticmethod
     def _eval_collect( e, syms, *args, **kwargs ):
         return qcollect_pauli( e, syms, *args, **kwargs )
+
+    # def _eval_expand_add( self, *args, **kwargs ):
+    #     return self
+    #
+    # def _eval_expand_mul( self, *args, **kwargs ):
+    #     return self
+    #
+    # def _eval_expand_power_base( self, *args, **kwargs ):
+    #     return self
+    #
+    # def _eval_expand_power_exp( self, *args, **kwargs ):
+    #     return self
 
 
 class SigmaI( SigmaOpBase, IdentityOperator ):
@@ -812,7 +828,7 @@ def _qsimplify_pauli_product( a, b ):
         return a * b
 
 
-def qsimplify_pauli( e ):
+def qsimplify_pauli( e, *args, **kwargs ):
     """
     Simplify an expression that includes products of pauli operators.
 

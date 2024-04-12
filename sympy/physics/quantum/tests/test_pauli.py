@@ -139,7 +139,7 @@ def test_pauli_operators_multiplication_with_labels():
 
 
 def test_pauli_power_qcore():
-    (a,b) = symbols('a b')
+    ( a, b ) = symbols( 'a b' )
     mul_expr_xy = sx1 * sx2
     mul_expr_xz = sy1 * sz2
     mul_expr_yz = sy1 * sz2
@@ -147,17 +147,17 @@ def test_pauli_power_qcore():
     add_expr_xz = sy1 + sz2
     add_expr_yz = sy1 + sz2
 
-    assert isinstance( mul_expr_xy,  Mul )
-    assert isinstance( mul_expr_xz,  Mul )
-    assert isinstance( mul_expr_yz,  Mul )
+    assert isinstance( mul_expr_xy, Mul )
+    assert isinstance( mul_expr_xz, Mul )
+    assert isinstance( mul_expr_yz, Mul )
 
     assert isinstance( mul_expr_xy, QCore )
     assert isinstance( mul_expr_xz, QCore )
     assert isinstance( mul_expr_yz, QCore )
 
-    assert isinstance( mul_expr_xy,  sympy.core.mul.Mul )
-    assert isinstance( mul_expr_xz,  sympy.core.mul.Mul )
-    assert isinstance( mul_expr_yz,  sympy.core.mul.Mul )
+    assert isinstance( mul_expr_xy, sympy.core.mul.Mul )
+    assert isinstance( mul_expr_xz, sympy.core.mul.Mul )
+    assert isinstance( mul_expr_yz, sympy.core.mul.Mul )
 
     assert isinstance( add_expr_xy, Add )
     assert isinstance( add_expr_xz, Add )
@@ -167,7 +167,7 @@ def test_pauli_power_qcore():
     assert isinstance( add_expr_xz, QCore )
     assert isinstance( add_expr_yz, QCore )
 
-    assert isinstance( add_expr_xy, sympy.core.add.Add  )
+    assert isinstance( add_expr_xy, sympy.core.add.Add )
     assert isinstance( add_expr_xz, sympy.core.add.Add )
     assert isinstance( add_expr_yz, sympy.core.add.Add )
 
@@ -208,22 +208,37 @@ def test_pauli_expand():
 
     i = I
     ( ex, ey, ez ) = symbols( 'ex ey ez' )
-    ( θx, θy, θz, ) = symbols( 'θx θy θz' )
+    ( thx, thy, thz, ) = symbols( 'Tx Ty Tz' )
     all = ( si, sx, sy, sz ) = ( SigmaI(), SigmaX(), SigmaY(), SigmaZ() )
 
     EX = cos( ex ) * si + i * sin( ex ) * sx
-    RX = cos( θx / 2 ) * si + i * sin( θx / 2 ) * sx
-    # EY = cos( ey ) * si + i * sin( ey ) * sy
-    # RY = cos( θy / 2 ) * si + i * sin( θy / 2 ) * sy
+    RX = cos( thx / 2 ) * si + i * sin( thx / 2 ) * sx
     EZ = cos( ez ) * si + i * sin( ez ) * sz
-    RZ = cos( θz / 2 ) * si + i * sin( θz / 2 ) * sz
+    RZ = cos( thz / 2 ) * si + i * sin( thz / 2 ) * sz
 
-    RYGate = EZ * RZ.subs( {θz:-1 * pi / 2} ) * EX * RX.subs( {θx:θy} ) * EZ * RZ.subs( {θz: pi / 2} )
+    RYGate = EZ*RZ.subs( {thz:-1*pi/2} ) * EX*RX.subs( {thx:thy} ) * EZ*RZ.subs( {thz:pi/2} )
     assert isinstance( RYGate, QCore )
+    assert isinstance( RYGate.expand(), QCore )
+    assert isinstance( RYGate.collect( all ), QCore )
     assert collect( RYGate, all ) == RYGate.collect( all )
-    # assert collect( RYGate.expand(), all) == RYGate.expand().collect(all)
+    assert collect( RYGate.expand(), all ) == RYGate.expand().collect( all )
 
-    pass
+
+def test_pauli_qcore_complete():
+    from sympy import cos, sin, pi, I as i
+    ( ex, ey, ez ) = symbols( 'ex ey ez' )
+    ( thx, thy, thz, thz1, thz2,) = symbols( 'Tx Ty Tz Tz1 Tz2' )
+    ( si, sx, sy, sz ) = ( SigmaI(), SigmaX(), SigmaY(), SigmaZ() )
+
+    EX = cos( ex ) * si + i * sin( ex ) * sx
+    RX = cos( thx / 2 ) * si + i * sin( thx / 2 ) * sx
+    EZ = cos( ez ) * si + i * sin( ez ) * sz
+    RZ = cos( thz / 2 ) * si + i * sin( thz / 2 ) * sz
+
+    FYGate = EZ * RZ.subs( {thz:thz1} ) * EX * RX.subs( {thx:thy} ) * EZ * RZ.subs( {thz: thz2} )
+    expected = cos( thy / 2 + ex ) * si + i * sin( thy / 2 + ex ) * sy
+
+    assert FYGate.subs({thz1:-1*pi/2, thz2:pi/2, thx:thy, ez:0, ey:ex}).expand().simplify() == expected
 
 
 def test_pauli_collect():
