@@ -216,7 +216,7 @@ def test_pauli_expand():
     EZ = cos( ez ) * si + i * sin( ez ) * sz
     RZ = cos( thz / 2 ) * si + i * sin( thz / 2 ) * sz
 
-    RYGate = EZ*RZ.subs( {thz:-1*pi/2} ) * EX*RX.subs( {thx:thy} ) * EZ*RZ.subs( {thz:pi/2} )
+    RYGate = EZ * RZ.subs( {thz:-1 * pi / 2} ) * EX * RX.subs( {thx:thy} ) * EZ * RZ.subs( {thz:pi / 2} )
     assert isinstance( RYGate, QCore )
     assert isinstance( RYGate.expand(), QCore )
     assert isinstance( RYGate.collect( all ), QCore )
@@ -227,7 +227,7 @@ def test_pauli_expand():
 def test_pauli_qcore_complete():
     from sympy import cos, sin, pi, I as i
     ( ex, ey, ez ) = symbols( 'ex ey ez' )
-    ( thx, thy, thz, thz1, thz2,) = symbols( 'Tx Ty Tz Tz1 Tz2' )
+    ( thx, thy, thz, thz1, thz2, ) = symbols( 'Tx Ty Tz Tz1 Tz2' )
     ( si, sx, sy, sz ) = ( SigmaI(), SigmaX(), SigmaY(), SigmaZ() )
 
     EX = cos( ex ) * si + i * sin( ex ) * sx
@@ -238,7 +238,7 @@ def test_pauli_qcore_complete():
     FYGate = EZ * RZ.subs( {thz:thz1} ) * EX * RX.subs( {thx:thy} ) * EZ * RZ.subs( {thz: thz2} )
     expected = cos( thy / 2 + ex ) * si + i * sin( thy / 2 + ex ) * sy
 
-    assert FYGate.subs({thz1:-1*pi/2, thz2:pi/2, thx:thy, ez:0, ey:ex}).expand().simplify() == expected
+    assert FYGate.subs( {thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex} ).expand().simplify() == expected
 
 
 def test_pauli_collect():
@@ -317,11 +317,52 @@ def test_pauli_states():
     raises( ValueError, lambda: SigmaZKet( 2 ) )
 
 
+def test_evalf():
+    from sympy import exp
+    ( a, b, ) = symbols( 'a b' )
+
+    assert ( a * exp( SigmaX( 1, suppress_evalf=True ) ) ).evalf() == a * exp( SigmaX( 1 ) )
+    raises( AttributeError, lambda: ( a * exp( SigmaX() ) ).evalf() )
+    raises( AttributeError, lambda: ( a * exp( SigmaX( suppress_evalf=False ) ) ).evalf() )
+
+    assert si.evalf() == Matrix( [[1, 0], [0, 1]] )
+    assert sx.evalf() == Matrix( [[0, 1], [1, 0]] )
+    assert sy.evalf() == Matrix( [[0, -I], [I, 0]] )
+    assert sz.evalf() == Matrix( [[1, 0], [0, -1]] )
+    assert sm.evalf() == Matrix( [[0, 0], [1, 0]] )
+    assert sp.evalf() == Matrix( [[0, 1], [0, 0]] )
+
+    assert si.evalf() == represent( si )
+    assert sx.evalf() == represent( sx )
+    assert sy.evalf() == represent( sy )
+    assert sz.evalf() == represent( sz )
+    assert sm.evalf() == represent( sm )
+    assert sp.evalf() == represent( sp )
+
+
+def test_hash():
+    assert hash( sx ) == hash( SigmaX() )
+    assert hash( sx1 ) == hash( SigmaX( 1 ) )
+    assert hash( sm ) != hash( sm1 )
+
+    assert hash( sx ) != hash( sy )
+    assert hash( sy ) != hash( sz )
+    assert hash( sz ) != hash( si )
+
+    assert hash( sx ) == hash( SigmaX( suppress_evalf=False ) )
+    assert hash( sx ) != hash( SigmaX( suppress_evalf=True ) )
+
+
 def test_use_name():
     assert sm.use_name is False
     assert sm1.use_name is True
     assert sx.use_name is False
     assert sx1.use_name is True
+
+    assert SigmaX( 0 ).use_name is True
+    assert SigmaX( False ).use_name is False
+    assert SigmaX( None ).use_name is False
+    assert SigmaX().use_name is False
 
 
 def test_printing():

@@ -4,6 +4,10 @@
             if the exponent is Zero,
         2. collect() from exceptioning due to non-commutative symbols
         3. expand() from returning core Add, Mul or Pow class
+
+    TBD:
+       Create function exp as subclass of functions.elementary.exponential.exp to
+        support rotation operators expressed as exp(i*theta*Op) [theta:real, Op:Operator]
 """
 import sympy
 from sympy import sympify, simplify
@@ -42,17 +46,18 @@ def _map_QCore( e, deep=True ):
     return e
 
 
-def _get_eval_simplify( args, deep=True ):
-    """ Collect simplify methods for arguments """
-    sfuncs = {}
-    for arg in args:
-        if isinstance( arg, ( Add, Mul, Pow ) ):
-            afuncs = _get_eval_simplify( arg.args )
-            for sfunc in afuncs:
-                sfuncs[sfunc] = 1
-        elif isinstance( arg, QCore ) and hasattr( arg, '_eval_simplify' ):
-            sfuncs[arg._eval_simplify] = 1
-    return sfuncs.keys()
+def _get_unique_attrs( v, name, deep=True ):
+    # Collect simplify methods for arguments
+    attrs = {}
+    if hasattr( v, 'args' ):
+        for arg in v.args:
+            if isinstance( arg, ( Add, Mul, Pow ) ):
+                arg_attrs = _get_unique_attrs( arg, name )
+                for arg_attr in arg_attrs:
+                    attrs[arg_attr] = 1
+            elif isinstance( arg, QCore ) and hasattr( arg, name ):
+                attrs[getattr( arg, name )] = 1
+    return attrs.keys()
 
 
 class QCore( Expr ):
@@ -114,7 +119,7 @@ class QCore( Expr ):
     def _eval_simplify( self, *args, **kwargs ):
         expr = self
         if hasattr( self, 'args' ):
-            sfuncs = _get_eval_simplify( self.args, deep=True )
+            sfuncs = _get_unique_attrs( self, '_eval_simplify', deep=True )
             for sfunc in sfuncs:
                 expr = sfunc( expr, *args, **kwargs )
 
@@ -127,9 +132,7 @@ class QCore( Expr ):
             expr = sympy.core.power.Pow( *expr.args )
 
         expr = simplify( expr, *args, **kwargs )
-        expr = _map_QCore( expr )
-
-        return expr
+        return _map_QCore( expr )
 
 
 class Add( QCore, sympy.core.add.Add ):
@@ -161,7 +164,7 @@ class Mul( QCore, sympy.core.mul.Mul ):
         return 110
 
     def _eval_power( self, e, *args, **kwargs ):
-        # Evaluation may force return sympy.core type
+        # Do not evaluate p**e since it may return core.pow object
         p = Pow( self, e, evaluate=False )
         if e.is_Rational or e.is_Float:
             return p._eval_expand_power_base()
@@ -239,3 +242,15 @@ class Pow( QCore, sympy.core.power.Pow ):
         return super().__eq__( other )
 
     __hash__ = sympy.core.power.Pow.__hash__
+
+
+def _set_evalf_entry():
+    """ Add the evalf processor functions to the global table """
+    from sympy.core.evalf import evalf_table, evalf_add, evalf_mul, evalf_pow
+    global evalf_table
+    evalf_table[Add] = evalf_add
+    evalf_table[Mul] = evalf_mul
+    evalf_table[Pow] = evalf_pow
+
+
+_set_evalf_entry()

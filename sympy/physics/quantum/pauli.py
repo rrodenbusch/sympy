@@ -41,19 +41,48 @@ class SigmaOpBase( QCore, Operator ):
         return self.args[0]
 
     @property
-    def _eval_simplify(self ):
+    def suppress_evalf( self ):
+        return self._suppress_evalf
+
+    @suppress_evalf.setter
+    def suppress_evalf( self, value ):
+        if not isinstance( value, bool ):
+            raise TypeError( f'suppress_evalf is bool not {type(value)}' )
+        self._suppress_evalf = True
+
+    def _pauli_evalf( self, *args, **kwargs ):
+        if self.suppress_evalf:
+            return self
+
+        return self._represent_default_basis( format=kwargs.get( 'format', 'sympy' ) )
+
+    @property
+    def _eval_simplify( self ):
         return qsimplify_pauli
 
     @property
+    def _eval_evalf( self, *args, **kwargs ):
+        return self._pauli_evalf
+
+    @property
     def use_name( self ):
-        return bool( self.args[0] ) is not False
+        return bool( self.args[0] ) is not False or ( self.args[0] == 0 )
 
     @classmethod
     def default_args( self ):
         return ( False, )
 
     def __new__( cls, *args, **hints ):
-        return Operator.__new__( cls, *args, **hints )
+        _suppress_evalf = hints.pop( 'suppress_evalf', False )
+        e = Operator.__new__( cls, *args, **hints )
+        e._suppress_evalf = _suppress_evalf
+        return e
+
+    def __key( self ):
+        return ( self.name, self._suppress_evalf, type( self ) )
+
+    def __hash__( self ):
+        return hash( self.__key() )
 
     def _eval_commutator_BosonOp( self, other, **hints ):
         return S.Zero
@@ -101,17 +130,9 @@ class SigmaOpBase( QCore, Operator ):
     def _eval_collect( e, syms, *args, **kwargs ):
         return qcollect_pauli( e, syms, *args, **kwargs )
 
-    # def _eval_expand_add( self, *args, **kwargs ):
-    #     return self
-    #
-    # def _eval_expand_mul( self, *args, **kwargs ):
-    #     return self
-    #
-    # def _eval_expand_power_base( self, *args, **kwargs ):
-    #     return self
-    #
-    # def _eval_expand_power_exp( self, *args, **kwargs ):
-    #     return self
+    def evalf( self, *args, **kwargs ):
+        # return qevalf_pauli( self, *args, **kwargs )
+        return self._pauli_evalf( self, *args, **kwargs )
 
 
 class SigmaI( SigmaOpBase, IdentityOperator ):
