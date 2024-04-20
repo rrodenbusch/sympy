@@ -24,7 +24,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 __all__ = [
@@ -40,6 +40,9 @@ class SigmaOpBase( QCore, Operator ):
     def name( self ):
         return self.args[0]
 
+    def dagger( self ):
+        return self._eval_adjoint()
+
     @property
     def suppress_evalf( self ):
         return self._suppress_evalf
@@ -54,7 +57,9 @@ class SigmaOpBase( QCore, Operator ):
         if self.suppress_evalf:
             return self
 
-        return self._represent_default_basis( format=kwargs.get( 'format', 'sympy' ) )
+        return ImmutableMatrix (
+            self._represent_default_basis( format=kwargs.get( 'format', 'sympy' ) )
+            )
 
     @property
     def _eval_simplify( self ):
@@ -133,6 +138,16 @@ class SigmaOpBase( QCore, Operator ):
     def evalf( self, *args, **kwargs ):
         # return qevalf_pauli( self, *args, **kwargs )
         return self._pauli_evalf( self, *args, **kwargs )
+
+    def _sympyrepr( self, printer, *args ):
+        if self.use_name:
+            return "%s(%s)" % (
+                self.__class__.__name__, printer._print( self.args[0] )
+            )
+        return "%s()" % ( self.__class__.__name__ )
+
+    def _sympystr( self, printer, *args ):
+        return self._sympyrepr( printer, *args )
 
 
 class SigmaI( SigmaOpBase, IdentityOperator ):

@@ -16,6 +16,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.core.decorators import call_highest_priority
 
 from sympy.physics.quantum.collect import collect
+from sympy.physics.quantum import Dagger, Commutator
 from sympy.core import Expr
 import sympy.core.add
 import sympy.core.mul
@@ -61,6 +62,14 @@ def _get_unique_attrs( v, name, deep=True ):
 
 
 class QCore( Expr ):
+    is_scalar = False
+    is_commutative = False
+
+    def dagger( self ):
+        return Dagger( self )
+
+    def commute( self, other ):
+        return Commutator( self, other )
 
     @property
     def __sympy__( self ):

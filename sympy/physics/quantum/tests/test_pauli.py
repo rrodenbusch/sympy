@@ -2,7 +2,7 @@ from sympy import symbols
 import sympy.core.mul
 from sympy.physics.quantum.qcore import QCore, Add, Mul, Pow
 from sympy.core.numbers import I
-from sympy.matrices.dense import Matrix
+from sympy.matrices import Matrix, ImmutableDenseMatrix
 from sympy.printing.latex import latex
 from sympy.physics.quantum import ( Dagger, Commutator, AntiCommutator, qapply,
                                    Operator, represent )
@@ -81,6 +81,14 @@ def test_pauli_operators_adjoint():
     assert Dagger( sy ) == sy
     assert Dagger( sz ) == sz
 
+    assert si.dagger() == si
+    assert sx.dagger() == sx
+    assert sy.dagger() == sy
+    assert sz.dagger() == sz
+
+    assert sx1.dagger() == sx1
+    assert sx.dagger() != sx1
+    assert sx1.dagger() != sx
 
 def test_pauli_operators_adjoint_with_labels():
 
@@ -317,13 +325,19 @@ def test_pauli_states():
     raises( ValueError, lambda: SigmaZKet( 2 ) )
 
 
+def test_commute():
+
+    assert sx.commute(sy) == Commutator(sx,sy)
+    assert sx.commute(sy).doit() == 2*I*sz
+    assert sy.commute(sz).doit() == 2*I*sx
+    assert sy.commute(sz).doit().evalf() == Matrix( [[0, 2.0*I], [2.0*I, 0]] )
+
 def test_evalf():
     from sympy import exp
     ( a, b, ) = symbols( 'a b' )
 
+    assert ( a * exp( SigmaX( ) ) ).evalf() == a * exp( SigmaX( ) )
     assert ( a * exp( SigmaX( 1, suppress_evalf=True ) ) ).evalf() == a * exp( SigmaX( 1 ) )
-    raises( AttributeError, lambda: ( a * exp( SigmaX() ) ).evalf() )
-    raises( AttributeError, lambda: ( a * exp( SigmaX( suppress_evalf=False ) ) ).evalf() )
 
     assert si.evalf() == Matrix( [[1, 0], [0, 1]] )
     assert sx.evalf() == Matrix( [[0, 1], [1, 0]] )
@@ -331,6 +345,13 @@ def test_evalf():
     assert sz.evalf() == Matrix( [[1, 0], [0, -1]] )
     assert sm.evalf() == Matrix( [[0, 0], [1, 0]] )
     assert sp.evalf() == Matrix( [[0, 1], [0, 0]] )
+
+    assert isinstance( si.evalf(), ImmutableDenseMatrix )
+    assert isinstance( sx.evalf(), ImmutableDenseMatrix )
+    assert isinstance( sy.evalf(), ImmutableDenseMatrix )
+    assert isinstance( sz.evalf(), ImmutableDenseMatrix )
+    assert isinstance( sm.evalf(), ImmutableDenseMatrix )
+    assert isinstance( sp.evalf(), ImmutableDenseMatrix )
 
     assert si.evalf() == represent( si )
     assert sx.evalf() == represent( sx )
