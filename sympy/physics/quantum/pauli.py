@@ -83,11 +83,11 @@ class SigmaOpBase( QCore, Operator ):
         e._suppress_evalf = _suppress_evalf
         return e
 
-    def __key( self ):
-        return ( self.name, self._suppress_evalf, type( self ) )
+    def _key( self ):
+        return ( self.__class__, self._suppress_evalf, *[x.__hash__() for x in self.args] )
 
     def __hash__( self ):
-        return hash( self.__key() )
+        return hash( self._key() )
 
     def _eval_commutator_BosonOp( self, other, **hints ):
         return S.Zero
@@ -136,7 +136,6 @@ class SigmaOpBase( QCore, Operator ):
         return qcollect_pauli( e, syms, *args, **kwargs )
 
     def evalf( self, *args, **kwargs ):
-        # return qevalf_pauli( self, *args, **kwargs )
         return self._pauli_evalf( self, *args, **kwargs )
 
     def _sympyrepr( self, printer, *args ):

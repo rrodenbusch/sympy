@@ -33,17 +33,17 @@ __all__ = [
 
 def _map_QCore( e, deep=True ):
     """ Restore correct class for any expressions containing core expressions """
-    if hasattr( e, 'args' ) and not isinstance( e, QCore ):
+    if hasattr( e, 'args' ) and ( deep or not isinstance( e, QCore ) ):
         if deep:
             sargs = [ _map_QCore( x, deep=deep ) for x in e.args ]
         else:
             sargs = e.args
         if isinstance( e, sympy.core.add.Add ):
-            return Add( *sargs )
+            return Add( *sargs, evaluate=False )
         if isinstance( e, sympy.core.mul.Mul ):
-            return Mul( *sargs )
+            return Mul( *sargs, evaluate=False )
         if isinstance( e, sympy.core.power.Pow ):
-            return Pow( *sargs )
+            return Pow( *sargs, evaluate=False )
     return e
 
 
@@ -65,16 +65,14 @@ class QCore( Expr ):
     is_scalar = False
     is_commutative = False
 
+    def doit( self, *args, **kwargs ):
+        return _map_QCore( super().doit( *args, **kwargs ) )
+
     def dagger( self ):
         return Dagger( self )
 
     def commute( self, other ):
         return Commutator( self, other )
-
-    @property
-    def __sympy__( self ):
-        # Prevents expand from sympifying the expression and loosing the core types
-        return True
 
     @property
     def _op_priority( self ):
@@ -143,6 +141,9 @@ class QCore( Expr ):
         expr = simplify( expr, *args, **kwargs )
         return _map_QCore( expr )
 
+    def _key( self ):
+        return ( self.__class__, *[x.__hash__() for x in self.args] )
+
 
 class Add( QCore, sympy.core.add.Add ):
 
@@ -163,7 +164,14 @@ class Add( QCore, sympy.core.add.Add ):
             other = Add( *other.args )
         return super().__eq__( other )
 
-    __hash__ = sympy.core.add.Add.__hash__
+    def __repr__( self ):
+        return '+'.join( [str( x ) for x in self.args] )
+
+    def __str__( self ):
+        return self.__repr__()
+
+    def __hash__( self ):
+        return hash( self._key() )
 
 
 class Mul( QCore, sympy.core.mul.Mul ):
@@ -179,6 +187,12 @@ class Mul( QCore, sympy.core.mul.Mul ):
             return p._eval_expand_power_base()
         return p
 
+    def __repr__( self ):
+        return '*'.join( [str( x ) for x in self.args] )
+
+    def __str__( self ):
+        return self.__repr__()
+
     # Note from sympy.core.basic:
     # ===========================
     #     If a class that overrides __eq__() needs to retain the
@@ -192,7 +206,8 @@ class Mul( QCore, sympy.core.mul.Mul ):
             other = Mul( *other.args )
         return super().__eq__( other )
 
-    __hash__ = sympy.core.mul.Mul.__hash__
+    def __hash__( self ):
+        return hash( self._key() )
 
 
 class Pow( QCore, sympy.core.power.Pow ):
@@ -250,7 +265,8 @@ class Pow( QCore, sympy.core.power.Pow ):
             other = Pow( *other.args )
         return super().__eq__( other )
 
-    __hash__ = sympy.core.power.Pow.__hash__
+    def __hash__( self ):
+        return hash( self._key() )
 
 
 def _set_evalf_entry():
