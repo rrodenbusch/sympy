@@ -123,6 +123,12 @@ class QCore( Expr ):
     def simplify( self, *args, **kwargs ):
         return self._eval_simplify( *args, **kwargs )
 
+    def diff( self, s ):
+        return _map_QCore( super().diff( s ) )
+
+    def _eval_derivative( self, s ):
+        return _map_QCore( super()._eval_derivative( s ) )
+
     def _eval_simplify( self, *args, **kwargs ):
         expr = self
         if hasattr( self, 'args' ):
