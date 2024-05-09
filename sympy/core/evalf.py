@@ -654,10 +654,7 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
             if result[1] is None:
                 has_zero = True
             continue
-        try:
-            num = Float._new(result[0], 1)
-        except TypeError:
-            raise NotImplementedError
+        num = Float._new(result[0], 1)
         if num is S.NaN:
             return fnan, None, prec, None
         if num.is_infinite:
