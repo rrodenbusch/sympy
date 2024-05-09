@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Callable
 from itertools import product
 
+from .binarymethod import BinaryMethod
 from .sympify import _sympify
 from .cache import cacheit
 from .singleton import S
@@ -19,7 +20,7 @@ from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
 
-class Pow(Expr):
+class Pow(BinaryMethod):
     """
     Defines the expression x**y as "x raised to a power y"
 
@@ -158,7 +159,10 @@ class Pow(Expr):
                     if b.is_finite is False:
                         return S.NaN
             if e is S.Zero:
-                return S.One
+                if hasattr(b, 'mul_identity'):
+                    return b.mul_identity
+                else:
+                    return S.One
             elif e is S.One:
                 return b
             elif e == -1 and not b:
@@ -166,7 +170,7 @@ class Pow(Expr):
             elif e.__class__.__name__ == "AccumulationBounds":
                 if b == S.Exp1:
                     from sympy.calculus.accumulationbounds import AccumBounds
-                    return AccumBounds(Pow(b, e.min), Pow(b, e.max))
+                    return AccumBounds(b**e.min, b**e.max)
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
             # do not do this with arbitrary expressions since symbolic
@@ -179,7 +183,7 @@ class Pow(Expr):
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
-                    return -Pow(-b, e)
+                    return -((-b)**e)
             if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
                 return S.NaN
             elif b is S.One:
@@ -244,9 +248,9 @@ class Pow(Expr):
         b, e = self.as_base_exp()
         if ask(Q.integer(e), assumptions) and b.could_extract_minus_sign():
             if ask(Q.even(e), assumptions):
-                return Pow(-b, e)
+                return (-b)**e
             elif ask(Q.odd(e), assumptions):
-                return -Pow(-b, e)
+                return -(-b**e)
 
     def _eval_power(self, other):
         b, e = self.as_base_exp()
@@ -291,9 +295,9 @@ class Pow(Expr):
                     # floor arg. is 1/2 + arg(b)/2/pi
                     if _half(other):
                         if b.is_negative is True:
-                            return S.NegativeOne**other*Pow(-b, e*other)
+                            return S.NegativeOne**other*(-b)**(e*other)
                         elif b.is_negative is False:  # XXX ok if im(b) != 0?
-                            return Pow(b, -other)
+                            return b**(-other)
                 elif e.is_even:
                     if b.is_extended_real:
                         b = abs(b)
@@ -330,7 +334,7 @@ class Pow(Expr):
                     s = None
 
         if s is not None:
-            return s*Pow(b, e*other)
+            return s*(b**(e*other))
 
     def _eval_Mod(self, q):
         r"""A dispatched function to compute `b^e \bmod q`, dispatched
@@ -375,8 +379,9 @@ class Pow(Expr):
             from .mod import Mod
 
             if isinstance(base, Pow) and base.is_integer and base.is_number:
+                func = base.func
                 base = Mod(base, q)
-                return Mod(Pow(base, exp, evaluate=False), q)
+                return Mod(func(base, exp, evaluate=False), q)
 
             if isinstance(exp, Pow) and exp.is_integer and exp.is_number:
                 bit_length = int(q).bit_length()
@@ -384,9 +389,10 @@ class Pow(Expr):
                 # if this dispatched function returns None.
                 # May need some fixes in the dispatcher itself.
                 if bit_length <= 80:
+                    func = exp.func
                     phi = totient(q)
                     exp = phi + Mod(exp, phi)
-                    return Mod(Pow(base, exp, evaluate=False), q)
+                    return Mod(func(base, exp, evaluate=False), q)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
@@ -509,7 +515,7 @@ class Pow(Expr):
         if real_b is None:
             if self.base.func == exp and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
-            if self.base.func == Pow and self.base.base is S.Exp1 and self.base.exp.is_imaginary:
+            if isinstance(self.base, Pow) and self.base.base is S.Exp1 and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
             return
         real_e = self.exp.is_extended_real
@@ -528,7 +534,7 @@ class Pow(Expr):
                 if self.exp.is_Rational:
                     return False
         if real_e and self.exp.is_extended_negative and self.base.is_zero is False:
-            return Pow(self.base, -self.exp).is_extended_real
+            return (self.base**(-self.exp)).is_extended_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:
@@ -748,7 +754,7 @@ class Pow(Expr):
         if isinstance(old, self.func) and self.exp == old.exp:
             l = log(self.base, old.base)
             if l.is_Number:
-                return Pow(new, l)
+                return new**l
 
         if isinstance(old, self.func) and self.base == old.base:
             if self.exp.is_Add is False:
@@ -759,7 +765,7 @@ class Pow(Expr):
                     # issue 5180: (x**(6*y)).subs(x**(3*y),z)->z**2
                     result = self.func(new, pow)
                     if remainder_pow is not None:
-                        result = Mul(result, Pow(old.base, remainder_pow))
+                        result = result * old.base**remainder_pow
                     return result
             else:  # b**(6*x + a).subs(b**(3*x), y) -> y**2 * b**a
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
@@ -783,7 +789,7 @@ class Pow(Expr):
                     o_al.append(newa)
                 if new_l:
                     expo = Add(*o_al)
-                    new_l.append(Pow(self.base, expo, evaluate=False) if expo != 1 else self.base)
+                    new_l.append(self.func(self.base, expo, evaluate=False) if expo != 1 else self.base)
                     return Mul(*new_l)
 
         if (isinstance(old, exp) or (old.is_Pow and old.base is S.Exp1)) and self.exp.is_extended_real and self.base.is_positive:
@@ -794,7 +800,7 @@ class Pow(Expr):
             if ok:
                 result = self.func(new, pow)  # (2**x).subs(exp(x*log(2)), z) -> z
                 if remainder_pow is not None:
-                    result = Mul(result, Pow(old.base, remainder_pow))
+                    result = result * old.base**remainder_pow
                 return result
 
     def as_base_exp(self):
@@ -827,44 +833,75 @@ class Pow(Expr):
         return b, e
 
     def _eval_adjoint(self):
+        # Once deprecation period for non-Expr arguments expires, base and exp will have conjugate
+        # method and can be called instead of checking for existence or calling imported class
         from sympy.functions.elementary.complexes import adjoint
         i, p = self.exp.is_integer, self.base.is_positive
         if i:
-            return adjoint(self.base)**self.exp
+            if hasattr(self.base, 'adjoint'):
+                return self.func(self.base.adjoint(),self.exp)
+            else:
+                return self.func(adjoint(self.base),self.exp)
         if p:
-            return self.base**adjoint(self.exp)
+            if hasattr(self.exp, 'adjoint'):
+                return self.func(self.base,self.exp.adjoint())
+            else:
+                return self.func(self.base,adjoint(self.exp))
         if i is False and p is False:
             expanded = expand_complex(self)
             if expanded != self:
-                return adjoint(expanded)
+                if hasattr(expanded, 'adjoint'):
+                    return expanded.adjoint()
+                else:
+                    return adjoint(expanded)
 
     def _eval_conjugate(self):
+        # Once deprecation period for non-Expr arguments expires, base and exp will have conjugate
+        # method and can be called instead of checking for existence or calling imported class
         from sympy.functions.elementary.complexes import conjugate as c
         i, p = self.exp.is_integer, self.base.is_positive
         if i:
-            return c(self.base)**self.exp
+            if hasattr(self.base,'conjugate'):
+                return self.func(self.base.conjugate(),self.exp)
+            else:
+                return self.func(c(self.base),self.exp)
         if p:
-            return self.base**c(self.exp)
+            if hasattr(self.exp,'conjugate'):
+                return self.func(self.base,self.exp.conjugate())
+            else:
+                return self.func(self.base,c(self.exp))
         if i is False and p is False:
             expanded = expand_complex(self)
             if expanded != self:
-                return c(expanded)
+                if hasattr(expanded,'conjugate'):
+                    return expanded.conjugate()
+                else:
+                    return c(expanded)
         if self.is_extended_real:
             return self
 
     def _eval_transpose(self):
+        # Once deprecation period for non-Expr arguments expires, base and exp will have transpose
+        # method and can be called instead of checking for existence or calling imported class
         from sympy.functions.elementary.complexes import transpose
         if self.base == S.Exp1:
             return self.func(S.Exp1, self.exp.transpose())
         i, p = self.exp.is_integer, (self.base.is_complex or self.base.is_infinite)
         if p:
-            return self.base**self.exp
+            # return self.base**self.exp  this is self
+            return self
         if i:
-            return transpose(self.base)**self.exp
+            if hasattr(self.base,'transpose'):
+                return self.func(self.base.transpose(),self.exp)
+            else:
+                return self.func(transpose(self.base),self.exp)
         if i is False and p is False:
             expanded = expand_complex(self)
             if expanded != self:
-                return transpose(expanded)
+                if hasattr(expanded,'transpose'):
+                    return expanded.transpose()
+                else:
+                    return transpose(expanded)
 
     def _eval_expand_power_exp(self, **hints):
         """a**(n + m) -> a**n*a**m"""
@@ -1380,7 +1417,7 @@ class Pow(Expr):
             # delay evaluation if expo is non symbolic
             # (as exp(x*log(5)) automatically reduces to x**5)
             if global_parameters.exp_is_pow:
-                return Pow(S.Exp1, log(base)*expo, evaluate=evaluate)
+                return self.func(S.Exp1, log(base)*expo, evaluate=evaluate)
             else:
                 return exp(log(base)*expo, evaluate=evaluate)
 
