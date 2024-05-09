@@ -3,6 +3,7 @@ from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
 from .basic import _args_sortkey
+from .binarymethod import BinaryMethod
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
@@ -83,7 +84,7 @@ def _unevaluated_Add(*args):
     return Add._from_args(newargs)
 
 
-class Add(Expr, AssocOp):
+class Add(BinaryMethod, AssocOp):
     """
     Expression representing addition operation for algebraic group.
 

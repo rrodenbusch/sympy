@@ -43,6 +43,9 @@ class SigmaOpBase( QCore, Operator ):
     def dagger( self ):
         return self._eval_adjoint()
 
+    def adjoint(self):
+        return self.dagger()
+
     @property
     def suppress_evalf( self ):
         return self._suppress_evalf
@@ -100,6 +103,11 @@ class SigmaOpBase( QCore, Operator ):
     def mul_identity( self ):
         return SigmaI( self.name )
 
+    # def as_real_imag(self, *args, **kwargs):
+    #     # Ignore keyword deep
+    #     # It will cause exception unless it can actually be evaluated to numeric
+    #     return self, S.Zero
+
     def __mul__( self, other ):
         if isinstance( other, SigmaI ):
             return self
@@ -113,7 +121,7 @@ class SigmaOpBase( QCore, Operator ):
 
     def _eval_power( self, e ):
         if isinstance( self, SigmaI ):
-            return SigmaI
+            return self
         elif e.is_Integer and e.is_positive:
             if int( e ) % 2:
                 return self

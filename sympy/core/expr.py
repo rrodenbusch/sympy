@@ -171,6 +171,70 @@ class Expr(Basic, EvalfMixin):
     # something better and more powerful.  See issue 5510.
     _op_priority = 10.0
 
+    def _args_top_priority(self):
+        return max( 10.0, *[x._op_priority for x in self.args if hasattr(x,'_op_priority')] )
+
+    def _top_priority_arg(self):
+        priority = self._args_top_priority()
+        return next((x for x in self.args if hasattr(x,'_op_priority') and x._op_priority == priority),None)
+
+    # def _top_priority_add(self, other):
+    #     return self._top_priority_arg().__add__(other)
+    #
+    # def _top_priority_radd(self, other):
+    #     return self._top_priority_arg().__radd__(other)
+    #
+    # def _top_priority_sub(self, other):
+    #     return self._top_priority_arg().__sub__(other)
+    #
+    # def _top_priority_rsub(self, other):
+    #     return self._top_priority_arg().__rsub__(other)
+    #
+    # def _top_priority_mul(self, other):
+    #     return self._top_priority_arg().__mul__(other)
+    #
+    # def _top_priority_rmul(self, other):
+    #     return self._top_priority_arg().__rmul__(other)
+    #
+    # def _top_priority_pow(self, other):
+    #     return self._top_priority_arg()._pow(other)
+    #
+    # def _top_priority_rpow(self, other):
+    #     return self._top_priority_arg().__rpow__(other)
+    #
+    # def _top_priority_truediv(self, other):
+    #     denom = other**S.NegativeOne
+    #     if self is S.One:
+    #         return denom
+    #     else:
+    #         return self._top_priority_mul(denom)
+    #
+    # def _top_priority_rtruediv(self, other):
+    #     denom = self**S.NegativeOne
+    #     if other is S.One:
+    #         return denom
+    #     else:
+    #         return other * denom
+    #
+    # def _top_priority_mod(self, other):
+    #     return self._top_priority_mod(other)
+
+    def _top_priority_rmod(self, other):
+        return self._top_priority_arg().__rmod__(other)
+
+    def _top_priority_floordiv(self, other):
+        return self._top_priority_arg().__floordiv__(other)
+
+    def _top_priority_rfloordiv(self, other):
+        return self._top_priority_arg().__rfloordiv__(other)
+
+    def _top_priority_divmod(self, other):
+        return self._top_priority_arg().__divmod__(other)
+
+    def _top_priority_rdivmod(self, other):
+        return self._top_priority_arg().__rdivmod__(other)
+
+
     @property
     def _add_handler(self):
         return Add

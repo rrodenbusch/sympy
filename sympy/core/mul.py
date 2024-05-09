@@ -6,6 +6,7 @@ import operator
 
 from .sympify import sympify
 from .basic import Basic, _args_sortkey
+from .binarymethod import BinaryMethod
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
@@ -88,7 +89,7 @@ def _unevaluated_Mul(*args):
     return Mul._from_args(newargs)
 
 
-class Mul(Expr, AssocOp):
+class Mul(BinaryMethod, AssocOp):
     """
     Expression representing multiplication operation for algebraic field.
 
