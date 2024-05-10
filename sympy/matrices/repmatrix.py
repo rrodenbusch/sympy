@@ -16,6 +16,7 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent, as_int
 
 from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+# from .expressions import MatrixExpr
 from .matrixbase import classof, MatrixBase
 from .kind import MatrixKind
 

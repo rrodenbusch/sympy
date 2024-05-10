@@ -171,12 +171,14 @@ class Expr(Basic, EvalfMixin):
     # something better and more powerful.  See issue 5510.
     _op_priority = 10.0
 
-    def _args_top_priority(self):
-        return max( 10.0, *[x._op_priority for x in self.args if hasattr(x,'_op_priority')] )
-
-    def _top_priority_arg(self):
-        priority = self._args_top_priority()
-        return next((x for x in self.args if hasattr(x,'_op_priority') and x._op_priority == priority),None)
+    # def _args_top_priority(self, *args):
+    #     return max( 10.0, *[x._op_priority for x in _all_args(*self.args, *args)] )
+    #
+    # def _top_priority_arg(self, *args):
+    #     all_args = _all_args(*self.args, *args)
+    #     priority = max( 10.0, *[x._op_priority for x in all_args] )
+    #     arg = next((x for x in all_args if x._op_priority == priority),None)
+    #     return arg
 
     # def _top_priority_add(self, other):
     #     return self._top_priority_arg().__add__(other)
@@ -234,6 +236,9 @@ class Expr(Basic, EvalfMixin):
     def _top_priority_rdivmod(self, other):
         return self._top_priority_arg().__rdivmod__(other)
 
+    @property
+    def _pow_handler(self):
+        return Pow
 
     @property
     def _add_handler(self):

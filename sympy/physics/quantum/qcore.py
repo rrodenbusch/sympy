@@ -75,6 +75,14 @@ class QCore( Expr ):
         return Commutator( self, other )
 
     @property
+    def _add_handler(self):
+        return Add
+
+    @property
+    def _mul_handler(self):
+        return Mul
+
+    @property
     def _op_priority( self ):
         return 100
 

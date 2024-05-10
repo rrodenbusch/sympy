@@ -33,8 +33,34 @@ __all__ = [
 ]
 
 
+class NoInverseError(Exception):
+    pass
+
+def _pauli_pow(base, other, *args, **kwargs):
+    # Need to add logic for bases that are Add, Mul, or Pow
+    if sympify( other ) is S.Zero:
+        if isinstance(base, SigmaOpBase):
+            return SigmaI( base.name )
+        else:
+            raise NoInverseError(f'({base}) has no inverse there Expr**0 is undefined')
+
+    return NotImplemented
+
+
 class SigmaOpBase( QCore, Operator ):
     """Pauli sigma operator, base class"""
+
+    @property
+    def _add_handler(self):
+        return Add
+
+    @property
+    def _mul_handler(self):
+        return Mul
+
+    @property
+    def _pow_handler(self):
+        return _pauli_pow
 
     @property
     def name( self ):
