@@ -60,8 +60,8 @@ def _get_unique_attrs( v, name, deep=True ):
                 attrs[getattr( arg, name )] = 1
     return attrs.keys()
 
-
-class QCore( Expr ):
+from sympy.core.binarymethod import BinaryMethod
+class QCore( BinaryMethod ):
     is_scalar = False
     is_commutative = False
 
