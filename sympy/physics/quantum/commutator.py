@@ -1,9 +1,10 @@
 """The commutator: [A,B] = A*B - B*A."""
 
-from sympy.core.add import Add
+from sympy.core.add import Add as cAdd
 from sympy.core.expr import Expr
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
+from sympy.core.mul import Mul as cMul
+from sympy.core.power import Pow as cPow
+from .algebraicoperation import opAdd as Add, opMul as Mul
 from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -142,7 +143,7 @@ class Commutator(Expr):
         A = self.args[0]
         B = self.args[1]
 
-        if isinstance(A, Add):
+        if isinstance(A, cAdd):
             # [A + B, C]  ->  [A, C] + [B, C]
             sargs = []
             for term in A.args:
@@ -151,7 +152,7 @@ class Commutator(Expr):
                     comm = comm._eval_expand_commutator()
                 sargs.append(comm)
             return Add(*sargs)
-        elif isinstance(B, Add):
+        elif isinstance(B, cAdd):
             # [A, B + C]  ->  [A, B] + [A, C]
             sargs = []
             for term in B.args:
@@ -160,7 +161,7 @@ class Commutator(Expr):
                     comm = comm._eval_expand_commutator()
                 sargs.append(comm)
             return Add(*sargs)
-        elif isinstance(A, Mul):
+        elif isinstance(A, cMul):
             # [A*B, C] -> A*[B, C] + [A, C]*B
             a = A.args[0]
             b = Mul(*A.args[1:])
@@ -174,7 +175,7 @@ class Commutator(Expr):
             first = Mul(a, comm1)
             second = Mul(comm2, b)
             return Add(first, second)
-        elif isinstance(B, Mul):
+        elif isinstance(B, cMul):
             # [A, B*C] -> [A, B]*C + B*[A, C]
             a = A
             b = B.args[0]
@@ -188,10 +189,10 @@ class Commutator(Expr):
             first = Mul(comm1, c)
             second = Mul(b, comm2)
             return Add(first, second)
-        elif isinstance(A, Pow):
+        elif isinstance(A, cPow):
             # [A**n, C] -> A**(n - 1)*[A, C] + A**(n - 2)*[A, C]*A + ... + [A, C]*A**(n-1)
             return self._expand_pow(A, B, 1)
-        elif isinstance(B, Pow):
+        elif isinstance(B, cPow):
             # [A, C**n] -> C**(n - 1)*[C, A] + C**(n - 2)*[C, A]*C + ... + [C, A]*C**(n-1)
             return self._expand_pow(B, A, -1)
 
