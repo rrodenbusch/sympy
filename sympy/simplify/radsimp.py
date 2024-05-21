@@ -1128,7 +1128,10 @@ def fraction(expr, exact=False):
             denom.append(term.q)
         else:
             numer.append(term)
-    return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
+
+    mul_handler = getattr(expr, '_mul_handler', Mul)
+    return mul_handler(*numer, evaluate=not exact), mul_handler(*denom, evaluate=not exact)
+    # return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
 def numer(expr, exact=False):  # default matches fraction's default
