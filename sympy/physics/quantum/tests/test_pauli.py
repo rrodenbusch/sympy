@@ -16,7 +16,7 @@
 
 from sympy import symbols
 import sympy.core.mul
-from sympy.physics.quantum.algebraicoperation import AlgebraicOperation, opAdd, opMul, opPow
+from sympy.physics.quantum.algebraicoperation import AlgebraicOperation, opAdd, opMul, opPow, opSymbol, op_symbols
 from sympy.core.numbers import I
 from sympy.matrices import Matrix, ImmutableDenseMatrix
 from sympy.printing.latex import latex
@@ -246,6 +246,8 @@ def test_pauli_expand():
     assert isinstance( RYGate, AlgebraicOperation )
     assert isinstance( RYGate.collect( all ), AlgebraicOperation )
     assert collect( RYGate, all ) == RYGate.collect( all )
+    assert isinstance( RYGate.expand(), AlgebraicOperation )
+    assert collect( RYGate.expand(), all ) == RYGate.expand().collect( all )
 
 
 def test_pauli_collect():
@@ -262,6 +264,7 @@ def test_pauli_collect():
                  ( [( a + d ) * sz + b * d * si + c * si + d * sz, ( si, ), ], ( b * d + c ) * si + ( a + d ) * sz + d * sz, ),
                  ( [sx, ( sx, sy, a, ), ], sx, ),
                 )
+
 
     for ( args, result ) in testcases:
         assert collect( *args ) == result
@@ -427,18 +430,16 @@ def test_pauli_qcore_complete():
     assert FYGate.subs( {thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex} ).expand().simplify() == expected
 
 
-@XFAIL
+# @XFAIL
 def test_commutator_type_fails():
     assert isinstance( Commutator( SigmaZ(), SigmaX() ).doit(), opMul )
 
 
 @XFAIL
 def test_commute_fails():
-
     assert sy.commute( sz ).doit().evalf() == Matrix( [[0, 2.0 * I], [2.0 * I, 0]] )
 
 
-@XFAIL
 def test_pauli_expandfails():
     from sympy import cos, sin, pi, I
     from sympy.physics.quantum.collect import collect
