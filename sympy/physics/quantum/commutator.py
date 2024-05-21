@@ -20,8 +20,8 @@ __all__ = [
 # Commutator
 #-----------------------------------------------------------------------------
 
-
-class Commutator(Expr):
+from .algebraicoperation import opExpr
+class Commutator(opExpr):
     """The standard commutator, in an unevaluated state.
 
     Explanation
