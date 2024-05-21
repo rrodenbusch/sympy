@@ -5,10 +5,11 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.operator import Operator
 
+from sympy.physics.quantum.algebraicoperation import op_symbols
 
 a, b, c = symbols('a,b,c')
 n = symbols('n', integer=True)
-A, B, C, D = symbols('A,B,C,D', commutative=False)
+A, B, C, D = op_symbols('A,B,C,D', commutative=False)
 
 
 def test_commutator():
