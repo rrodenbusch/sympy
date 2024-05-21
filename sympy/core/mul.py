@@ -33,6 +33,14 @@ def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
 
+def _binary_op_wrapper(a, b, method_name=None, default=None):
+    if hasattr(b, '_op_priority'):
+        if b._op_priority > a._op_priority:
+            f = getattr(b, method_name, default)
+            if f is not None:
+                return f
+    f = getattr(a, method_name, default)
+    return f
 
 def _unevaluated_Mul(*args):
     """Return a well-formed unevaluated Mul: Numbers are collected and
@@ -292,7 +300,9 @@ class Mul(Expr, AssocOp):
                             arb = cls(a*r, b, evaluate=False)
                         rv = [arb], [], None
                     elif global_parameters.distribute and b.is_commutative:
-                        newb = Add(*[_keep_coeff(a, bi) for bi in b.args])
+                        # newb = Add(*[_keep_coeff(a, bi) for bi in b.args])
+                        add_handler  = _binary_op_wrapper(a, b, '_add_handler', Add)
+                        newb = add_handler(*[_keep_coeff(a, bi) for bi in b.args])
                         rv = [newb], [], None
             if rv:
                 return rv
@@ -712,7 +722,8 @@ class Mul(Expr, AssocOp):
                 c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
-            c_part = [Add(*[coeff*f for f in c_part[1].args])]
+            add_handler  = _binary_op_wrapper(c_part[0], c_part[1],'_add_handler', Add)
+            c_part = [add_handler(*[coeff*f for f in c_part[1].args])]
 
         return c_part, nc_part, order_symbols
 
@@ -909,7 +920,8 @@ class Mul(Expr, AssocOp):
         left = Mul._expandsums(sums[:L//2])
         right = Mul._expandsums(sums[L//2:])
 
-        terms = [Mul(a, b) for a in left for b in right]
+        # terms = [Mul(a, b) for a in left for b in right]
+        terms = [a*b for a in left for b in right]
         added = Add(*terms)
         return Add.make_args(added)  # it may have collapsed down to one term
 
@@ -952,7 +964,9 @@ class Mul(Expr, AssocOp):
                     if t.is_Mul and any(a.is_Add for a in t.args) and deep:
                         t = t._eval_expand_mul()
                     args.append(t)
-                return Add(*args)
+                add_handler = getattr(self, '_add_handler', Add)
+                return add_handler(*args)
+                # return Add(*args)
             else:
                 return plain
 

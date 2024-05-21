@@ -32,7 +32,10 @@ def _could_extract_minus_sign(expr):
 
 def _addsort(args):
     # in-place sorting of args
+    args2 = args[::]
     args.sort(key=_args_sortkey)
+    if args == args2:
+        pass
 
 
 def _unevaluated_Add(*args):
@@ -81,6 +84,15 @@ def _unevaluated_Add(*args):
     if co:
         newargs.insert(0, co)
     return Add._from_args(newargs)
+
+def _binary_op_wrapper(a, b, method_name=None, default=None):
+    if hasattr(b, '_op_priority'):
+        if b._op_priority > a._op_priority:
+            f = getattr(b, method_name, default)
+            if f is not None:
+                return f
+    f = getattr(a, method_name, default)
+    return f
 
 
 class Add(Expr, AssocOp):
@@ -329,10 +341,15 @@ class Add(Expr, AssocOp):
                     newseq.append(cs)
                 elif s.is_Add:
                     # we just re-create the unevaluated Mul
-                    newseq.append(Mul(c, s, evaluate=False))
+                    # and execute highest priority _mul_handler
+                    mul_handler = _binary_op_wrapper(c,s,'_mul_handler',Mul)
+                    newseq.append(mul_handler(c, s, evaluate=False))
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
-                    newseq.append(Mul(c, s))
+                    # newseq.append(Mul(c, s))
+                    # mul_handler = _binary_op_wrapper(c,s,'_mul_handler',Mul)
+                    # newseq.append( mul_handler(c,s) )
+                    newseq.append( c * s )
 
             noncommutative = noncommutative or not s.is_commutative
 

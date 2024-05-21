@@ -3702,8 +3702,9 @@ class Expr(Basic, EvalfMixin):
 
                 if coeff:
                     terms.append(coeff*tail)
-
-            expr = Add(*terms)
+            # expr = Add(*terms)
+            add_handler = getattr(self, '_add_handler', Add)
+            expr = add_handler(*terms)
 
         return expr
 
