@@ -65,15 +65,6 @@ def _pauli_pow( base, other, *args, **kwargs ):
     else:
         return opPow( base, other )  # core will override the types on evaluation
     return NotImplemented
-#
-#
-# def _pauli_evalf( pauli, prec, *args, **kwargs ):
-#     if pauli.suppress_evalf:
-#         return pauli, prec, None, None
-#
-#     return ImmutableMatrix (
-#         pauli._represent_default_basis( format=kwargs.get( 'format', 'sympy' ) )
-#         ), prec, None, None
 
 
 class SigmaOpBase( opExpr, Operator ):
@@ -87,7 +78,6 @@ class SigmaOpBase( opExpr, Operator ):
     # In sympy, slots are for instance attributes that are computed
     # dynamically by the __new__ method. They are not part of args, but they
     # derive from args.
-
     # The     __slots__ = ('hilbert_space', )
 
     is_scalar = False
@@ -119,10 +109,6 @@ class SigmaOpBase( opExpr, Operator ):
 
     def __pow__( self, other, *args, **kwargs ):
         return _pauli_pow( self, other, *args, **kwargs )
-        # if isinstance( self, SigmaI ) or sympify( other ) is S.Zero:
-        #     return( SigmaI( self.name ) )
-        # else:
-        #     return opPow( self, other )
 
     def _eval_power( self, e ):
         if isinstance( self, SigmaI ):
@@ -132,23 +118,6 @@ class SigmaOpBase( opExpr, Operator ):
                 return self
             else:
                 return SigmaI( self.name )
-
-    # @property
-    # def _add_handler(self):
-    #     return opAdd
-    #
-    # @property
-    # def _mul_handler(self):
-    #     return opMul
-
-    # def __add__( self, *args, **kwargs ):
-    #     return opAdd( self, *args, **kwargs )
-    #
-    # def __mul__( self, *args, **kwargs ):
-    #     return opMul( self, *args, **kwargs )
-    #
-    # def __pow__( self, *args, **kwargs ):
-    #     return opPow( self, *args, **kwargs )
 
     @property
     def name( self ):
@@ -204,23 +173,10 @@ class SigmaOpBase( opExpr, Operator ):
     def _eval_commutator_BosonOp( self, other, **hints ):
         return S.Zero
 
-    # @property
-    # def mul_identity( self ):
-    #     return SigmaI( self.name )
-
     def as_real_imag( self, *args, **kwargs ):
         # Ignore keyword deep
         # It will cause exception unless it can actually be evaluated to numeric
         return self, S.Zero
-
-    # def _eval_power( self, e ):
-    #     if isinstance( self, SigmaI ):
-    #         return self
-    #     elif e.is_Integer and e.is_positive:
-    #         if int( e ) % 2:
-    #             return self
-    #         else:
-    #             return SigmaI( self.name )
 
     def collect( self, syms, *args, **kwargs ):
         op_syms = list( filter( lambda x: isinstance( x, ( SigmaI, SigmaX, SigmaY, SigmaZ ) ), syms ) )
