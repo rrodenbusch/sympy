@@ -3,13 +3,15 @@ import sympy.core.add
 import sympy.core.mul
 import sympy.core.power
 
+from sympy.core.basic import ordering_of_classes
 
-def _all_args( *args ):
+
+def _all_args( *args, **kwargs ):
     all_args = []
     for o in args:
         if hasattr( o, 'args' ) and len( o.args ):
             all_args.extend( _all_args( *o.args ) )
-        if hasattr( o, '_op_priority' )  and not isinstance( o, AlgebraicOperation ):
+        if hasattr( o, '_op_priority' )  and type( o ) is not AlgebraicOperation:
             all_args.append( o )
     return all_args
 
@@ -19,8 +21,8 @@ def _args_top_priority( self, *args, **kwargs ):
 
 
 def _top_priority_arg( self, *args, **kwargs ):
-    all_args = _all_args( *self.args, *args )
-    priority = max( 10.0, *[x._op_priority for x in all_args] )
+    all_args = _all_args( self, *args )  # *self.args vs self
+    priority = max( 10.0, *list( [x._op_priority for x in all_args] ) )
     if getattr( self, '_op_priority', 0 ) > priority:
         return self
     arg = next( ( x for x in all_args if x._op_priority == priority ), None )
@@ -29,6 +31,16 @@ def _top_priority_arg( self, *args, **kwargs ):
 
 def _no_handler( *args, **kwargs ):
     return NotImplemented
+
+
+def binary_op_wrapper( self, other, method_name=None, default=None ):
+    if hasattr( other, '_op_priority' ):
+        if other._op_priority > self._op_priority:
+            f = getattr( other, method_name, default )
+            if f is not None:
+                return f
+    f = getattr( self, method_name, default )
+    return f
 
 
 class AlgebraicOperation( Expr ):
@@ -75,6 +87,14 @@ class AlgebraicOperation( Expr ):
     sympy.matrices.MutableDenseMatrix
 
     """
+    _op_priority = 15.0
+
+    # @property
+    # def identity(self):
+    #     return self._identity
+    # @identity.setter
+    # def identity(self, value):
+    #     self._identity = value
 
     @property
     def _op_priority( self ):
@@ -92,6 +112,10 @@ class AlgebraicOperation( Expr ):
     def _pow_handler( self ):
         return opPow
 
+    def __neg__( self ):
+        arg = _top_priority_arg( self, )
+        return getattr( arg, '_mul_handler', _no_handler )( S.NegativeOne, self )
+
     def __add__( self, other ):
         arg = _top_priority_arg( self, other )
         return getattr( arg, '_add_handler', _no_handler )( self, other )
@@ -99,6 +123,14 @@ class AlgebraicOperation( Expr ):
     def __radd__( self, other ):
         arg = _top_priority_arg( self, other )
         return getattr( arg, '_add_handler', _no_handler )( other, self )
+
+    def __sub__( self, other ):
+        arg = _top_priority_arg( self, other )
+        return getattr( arg, '_add_handler', _no_handler )( self, -other )
+
+    def __rsub__( self, other ):
+        arg = _top_priority_arg( self, other )
+        return getattr( arg, '_add_handler', _no_handler )( other, -self )
 
     def __mul__( self, other ):
         arg = _top_priority_arg( self, other )
@@ -108,14 +140,80 @@ class AlgebraicOperation( Expr ):
         arg = _top_priority_arg( self, other )
         return getattr( arg, '_mul_handler', _no_handler )( other, self )
 
-    def __pow__( self, other ):
-        arg = _top_priority_arg( self, other )
-        return getattr( arg, '_pow_handler', _no_handler )( self, other )
-
     def _pow( self, other ):
         arg = _top_priority_arg( self, other )
         return getattr( arg, '_pow_handler', _no_handler )( self, other )
 
+    def __pow__( self, other ):
+        arg = _top_priority_arg( self, other )
+        return getattr( arg, '_pow_handler', _no_handler )( self, other )
+
+    def __rpow__( self, other ):
+        arg = _top_priority_arg( self, other )
+        return getattr( arg, '_pow_handler', _no_handler )( other, self )
+
+    def __truediv__( self, other ):
+        # if other is S.One:
+        #     return self
+        arg = _top_priority_arg( self, other )
+        denom = getattr( arg, '_pow_handler', _no_handler )( other, S.NegativeOne )
+        if self is S.One:
+            return denom
+        else:
+            return getattr( arg, '_mul_handler', _no_handler )( self, denom )
+
+    def __rtruediv__( self, other ):
+        arg = _top_priority_arg( self, other )
+        denom = getattr( arg, '_pow_handler', _no_handler )( self, S.NegativeOne )
+        if other is S.One:
+            return denom
+        else:
+            return getattr( arg, '_mul_handler', _no_handler )( other, denom )
+
+    # Methods from Expr (__pos__, __abs__, __mod__, __rmod__, __floordiv__, __rfloordiv__, __divmod__, __rdivmod__ )
+
+    def compare( self, other ):
+        # basic._cmp_name does not allow easy addition to the
+        # ordering of classes so do comparison here if x or y is
+        # algebraic operation
+        from sympy.core.basic import Basic
+        i1 = getattr( self, '_class_order', None )
+        if i1 is None:
+            n1 = self.__class__.__name__
+            try:
+                i1 = ordering_of_classes.index( n1 )
+            except ValueError:
+                i1 = len( ordering_of_classes ) + 1
+
+        i2 = getattr( other, '_class_order', None )
+        if i2 is None:
+            n2 = other.__class__.__name__
+            try:
+                i2 = ordering_of_classes.index( n2 )
+            except ValueError:
+                i2 = len( ordering_of_classes ) + 1
+
+        c = ( i1 > i2 ) - ( i1 < i2 )
+        if c:
+            return c
+
+        st = self._hashable_content()
+        ot = other._hashable_content()
+        c = ( len( st ) > len( ot ) ) - ( len( st ) < len( ot ) )
+        if c:
+            return c
+        for l, r in zip( st, ot ):
+            l = Basic( *l ) if isinstance( l, frozenset ) else l
+            r = Basic( *r ) if isinstance( r, frozenset ) else r
+            if isinstance( l, Basic ):
+                c = l.compare( r )
+            else:
+                c = ( l > r ) - ( l < r )
+            if c:
+                return c
+        return 0
+
+    # Expr evaluation hint methods.  Calls Expr._eval_expand_'hint'
     def _eval_add( self, other ):
         return opAdd( self, other, evaluate=False )
 
@@ -125,10 +223,13 @@ class AlgebraicOperation( Expr ):
     def _eval_power( self, e ):
         return opPow( self, e, evaluate=False )
 
-    # @call_highest_priority( 'collect' )
     def collect( self, syms, *args, **kwargs ):
         arg = _top_priority_arg( self )
         return getattr( arg, '_collect_handler', _no_handler )( self, syms, *args, **kwargs )
+
+    def __repr__( self ):
+        repr = super().__repr__()
+        return repr
 
 
 from sympy.core.add import Add
@@ -138,8 +239,62 @@ from sympy import sympify
 from sympy.core.singleton import S
 
 
-class opAdd( AlgebraicOperation, Add ):
+# AlgebraicOperation
+class opExpr( AlgebraicOperation ):
 
+    @property
+    def _op_priority( self ):
+        return 20.0  # Above basic, matrices, algebraic operators, but below opAdd, opMul,
+
+    def __radd__( self, other, *args, **kwargs ):
+        return opAdd( other, self, *args, **kwargs )
+
+    def __add__( self, *args, **kwargs ):
+        return opAdd( self, *args, **kwargs )
+
+    def __sub__( self, other ):
+        obj = opAdd( self, -other )
+        return obj
+
+    def __rsub__( self, other ):
+        obj = opAdd( other, -self )
+        return obj
+
+    def __neg__( self ):
+        # Mul has its own __neg__ routine, so we just
+        # create a 2-args Mul with the -1 in the canonical
+        # slot 0.
+        c = self.is_commutative
+        obj = opMul._from_args( ( S.NegativeOne, self ), c )
+        return obj
+
+    def __mul__( self, *args, **kwargs ):
+        return opMul( self, *args, **kwargs )
+
+    def __rmul__( self, other, *args, **kwargs ):
+        return opMul( other, self, *args, **kwargs )
+
+    def __pow__( self, *args, **kwargs ):
+        return opPow( self, *args, **kwargs )
+
+
+from sympy.core.basic import Atom
+from sympy.core.symbol import Symbol, symbols
+
+
+class opSymbol( Symbol, opExpr ):
+    """ Symbol class to ensure symbols remain in the Ring """
+    # Add property to support operator compare since adding
+    # the new class name to the ordering_of_classes list in basic
+    _class_order = ordering_of_classes.index( 'Symbol' )
+
+
+def op_symbols( names, *args, cls=Symbol, **kwargs ):
+    retvals = symbols( names, *args, cls=opSymbol, **kwargs )
+    return retvals
+
+
+class opAdd( AlgebraicOperation, Add ):
     # Note from sympy.core.basic:
     # ===========================
     #     If a class that overrides __eq__() needs to retain the
@@ -148,6 +303,9 @@ class opAdd( AlgebraicOperation, Add ):
     #     __hash__ : Callable[[object], int] = <ParentClass>.__hash__.
     #     Otherwise the inheritance of __hash__() will be blocked,
     #     just as if __hash__ had been explicitly set to None.
+
+    _class_order = ordering_of_classes.index( 'Add' )
+
     def __eq__( self, other ):
         if not isinstance( other, opAdd ) and isinstance( other, sympy.core.add.Add ):
             other = opAdd( *other.args )
@@ -158,6 +316,9 @@ class opAdd( AlgebraicOperation, Add ):
 
 class opMul( AlgebraicOperation, Mul ):
 
+    _class_order = ordering_of_classes.index( 'Mul' )
+
+    # _args_type = opExpr
     # Note from sympy.core.basic:
     # ===========================
     #     If a class that overrides __eq__() needs to retain the
@@ -176,11 +337,16 @@ class opMul( AlgebraicOperation, Mul ):
 
 class opPow( AlgebraicOperation, Pow ):
 
+    _class_order = ordering_of_classes.index( 'Pow' )
+
     def __new__( cls, *args, **kwargs ):
         if len( args ) > 1 and sympify( args[1] ) is S.Zero:
             arg = _top_priority_arg( args[0], args[1] )
-            return getattr( arg, '_pow_handler', _no_handler )( args[0], args[1] )
-        return super().__new__( cls, *args, **kwargs )
+            pow_handler = getattr( arg, '_pow_handler', _no_handler )
+            if pow_handler is not opPow:
+                return pow_handler( args[0], args[1] )
+        obj = super().__new__( cls, *args, **kwargs )
+        return obj
 
     # Note from sympy.core.basic:
     # ===========================
@@ -196,36 +362,6 @@ class opPow( AlgebraicOperation, Pow ):
         return super().__eq__( other )
 
     __hash__ = sympy.core.power.Pow.__hash__
-
-
-class opExpr( Expr ):
-
-    @property
-    def _add_handler( self ):
-        return opAdd
-
-    @property
-    def _mul_handler( self ):
-        return opMul
-
-    @property
-    def _pow_handler( self ):
-        return opPow
-
-    def __radd__( self, other, *args, **kwargs ):
-        return opAdd( other, self, *args, **kwargs )
-
-    def __add__( self, *args, **kwargs ):
-        return opAdd( self, *args, **kwargs )
-
-    def __mul__( self, *args, **kwargs ):
-        return opMul( self, *args, **kwargs )
-
-    def __rmul__( self, other, *args, **kwargs ):
-        return opMul( other, self, *args, **kwargs )
-
-    def __pow__( self, *args, **kwargs ):
-        return opPow( self, *args, **kwargs )
 
 
 def _set_evalf_entry():
