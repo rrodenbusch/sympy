@@ -3817,34 +3817,34 @@ def test_sympy__physics__quantum__fermion__FermionFockBra():
     from sympy.physics.quantum.fermion import FermionFockBra
     assert _test_args(FermionFockBra(1))
 
-
-@SKIP("abstract Class")
-def test_sympy__physics_quantum__qalgebras__BinaryMethod():
-    from sympy.core.binarymethod import BinaryMethod
-    assert _test_args(BinaryMethod())
-
-# @SKIP("abstract class")
-def test_sympy__physics__quantum__qcore__QCore():
-    from sympy.physics.quantum.qcore import QCore
-    assert _test_args(QCore())
-
-# @SKIP("abstract class")
-def test_sympy__physics__quantum__qcore__Add():
-    from sympy.physics.quantum.qcore import Add
-    from sympy.physics.quantum.pauli import SigmaX, SigmaY
-    assert _test_args(Add(SigmaX(), SigmaY()))
-
-# @SKIP("abstract class")
-def test_sympy__physics__quantum__qcore__Mul():
-    from sympy.physics.quantum.qcore import Mul
-    from sympy.physics.quantum.pauli import SigmaX, SigmaY
-    assert _test_args(Mul(SigmaX(), SigmaY()))
-
-# @SKIP("abstract class")
-def test_sympy__physics__quantum__qcore__Pow():
-    from sympy.physics.quantum.qcore import Pow
-    from sympy.physics.quantum.pauli import SigmaX
-    assert _test_args(Pow(SigmaX(), 2))
+#
+# @SKIP("abstract Class")
+# def test_sympy__physics_quantum__qalgebras__BinaryMethod():
+#     from sympy.core.binarymethod import BinaryMethod
+#     assert _test_args(BinaryMethod())
+#
+# # @SKIP("abstract class")
+# def test_sympy__physics__quantum__qcore__QCore():
+#     from sympy.physics.quantum.qcore import QCore
+#     assert _test_args(QCore())
+#
+# # @SKIP("abstract class")
+# def test_sympy__physics__quantum__qcore__Add():
+#     from sympy.physics.quantum.qcore import Add
+#     from sympy.physics.quantum.pauli import SigmaX, SigmaY
+#     assert _test_args(Add(SigmaX(), SigmaY()))
+#
+# # @SKIP("abstract class")
+# def test_sympy__physics__quantum__qcore__Mul():
+#     from sympy.physics.quantum.qcore import Mul
+#     from sympy.physics.quantum.pauli import SigmaX, SigmaY
+#     assert _test_args(Mul(SigmaX(), SigmaY()))
+#
+# # @SKIP("abstract class")
+# def test_sympy__physics__quantum__qcore__Pow():
+#     from sympy.physics.quantum.qcore import Pow
+#     from sympy.physics.quantum.pauli import SigmaX
+#     assert _test_args(Pow(SigmaX(), 2))
 
 def test_sympy__physics__quantum__algebraicoperation__AlgebraicOperation():
     from sympy.physics.quantum.algebraicoperation import AlgebraicOperation
@@ -3865,6 +3865,10 @@ def test_sympy__physics__quantum__algebraicoperation__opMul():
 def test_sympy__physics__quantum__algebraicoperation__opPow():
     from sympy.physics.quantum.algebraicoperation import opPow
     assert _test_args(opPow(a,b))
+
+def test_sympy__physics__quantum__algebraicoperation__opSymbol():
+    from sympy.physics.quantum.algebraicoperation import opSymbol
+    assert _test_args(opSymbol('A'))
 
 def test_sympy__physics__quantum__pauli__SigmaOpBase():
     from sympy.physics.quantum.pauli import SigmaOpBase
