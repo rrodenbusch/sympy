@@ -22,7 +22,8 @@ def _args_top_priority( self, *args, **kwargs ):
 
 def _top_priority_arg( self, *args, **kwargs ):
     all_args = _all_args( self, *args )  # *self.args vs self
-    priority = max( 10.0, *list( [x._op_priority for x in all_args] ) )
+    # priority = max( 10.0, *list( [x._op_priority for x in all_args] ) )
+    priority = max( 10.0, *( [x._op_priority for x in all_args] ) )
     if getattr( self, '_op_priority', 0 ) > priority:
         return self
     arg = next( ( x for x in all_args if x._op_priority == priority ), None )
@@ -87,7 +88,7 @@ class AlgebraicOperation( Expr ):
     sympy.matrices.MutableDenseMatrix
 
     """
-    _op_priority = 15.0
+    # _op_priority = 15.0
 
     # @property
     # def identity(self):
@@ -278,7 +279,6 @@ class opExpr( AlgebraicOperation ):
         return opPow( self, *args, **kwargs )
 
 
-from sympy.core.basic import Atom
 from sympy.core.symbol import Symbol, symbols
 
 

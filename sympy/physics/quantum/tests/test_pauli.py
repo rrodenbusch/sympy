@@ -16,7 +16,7 @@
 
 from sympy import symbols
 import sympy.core.mul
-from sympy.physics.quantum.algebraicoperation import AlgebraicOperation, opAdd, opMul, opPow, opSymbol, op_symbols
+from sympy.physics.quantum.algebraicoperation import AlgebraicOperation, opAdd, opMul, opPow
 from sympy.core.numbers import I
 from sympy.matrices import Matrix, ImmutableDenseMatrix
 from sympy.printing.latex import latex
