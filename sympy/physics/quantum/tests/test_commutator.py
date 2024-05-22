@@ -6,7 +6,6 @@ from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.operator import Operator
 
 from sympy.physics.quantum.algebraicoperation import op_symbols
-from sympy.testing.pytest import XFAIL
 
 a, b, c = symbols('a,b,c')
 n = symbols('n', integer=True)
@@ -43,7 +42,7 @@ def test_commutator_identities():
     e = Comm(A, Comm(B, C)) + Comm(B, Comm(C, A)) + Comm(C, Comm(A, B))
     assert e.doit().expand() == 0
 
-@XFAIL
+
 def test_commutator_dagger():
     comm = Comm(A*B, C)
     assert Dagger(comm).expand(commutator=True) == \
