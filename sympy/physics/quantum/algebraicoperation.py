@@ -174,17 +174,20 @@ class AlgebraicOperation( Expr ):
     # Methods from Expr (__pos__, __abs__, __mod__, __rmod__, __floordiv__, __rfloordiv__, __divmod__, __rdivmod__ )
 
     def compare( self, other ):
+        """ Return -1, 0, 1 if the object is less than, equal, greater than """
+
         # basic._cmp_name does not allow easy addition to the
         # ordering of classes so do comparison here if x or y is
         # algebraic operation
         from sympy.core.basic import Basic
+        UNKNOWN = len( ordering_of_classes ) + 1
         i1 = getattr( self, '_class_order', None )
         if i1 is None:
             n1 = self.__class__.__name__
             try:
                 i1 = ordering_of_classes.index( n1 )
             except ValueError:
-                i1 = len( ordering_of_classes ) + 1
+                i1 = UNKNOWN
 
         i2 = getattr( other, '_class_order', None )
         if i2 is None:
@@ -192,9 +195,12 @@ class AlgebraicOperation( Expr ):
             try:
                 i2 = ordering_of_classes.index( n2 )
             except ValueError:
-                i2 = len( ordering_of_classes ) + 1
+                i2 = UNKNOWN
 
-        c = ( i1 > i2 ) - ( i1 < i2 )
+        if i1 == UNKNOWN and i2 == UNKNOWN:
+            c = ( n1 > n2 ) - ( n1 < n2 )
+        else:
+            c = ( i1 > i2 ) - ( i1 < i2 )
         if c:
             return c
 
