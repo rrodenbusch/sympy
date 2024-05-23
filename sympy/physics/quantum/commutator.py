@@ -4,7 +4,7 @@ from sympy.core.add import Add as cAdd
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul as cMul
 from sympy.core.power import Pow as cPow
-from .algebraicoperation import opAdd as Add, opMul as Mul
+from .abstractalgebra import opExpr, opAdd as Add, opMul as Mul
 from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -20,7 +20,6 @@ __all__ = [
 # Commutator
 #-----------------------------------------------------------------------------
 
-from .algebraicoperation import opExpr
 class Commutator(opExpr):
     """The standard commutator, in an unevaluated state.
 

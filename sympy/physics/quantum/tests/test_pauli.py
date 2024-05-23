@@ -2,7 +2,7 @@
 
     TODO:
     See XFAIL test cases for TBD enhancements. Some changes may be
-    internal to AlgebraicOperation classes
+    internal to AbstractAlgebra classes
 
     Commutators return core.Mul sometimes
         forced type conversion in __eq__ hides issue
@@ -16,7 +16,7 @@
 
 from sympy import symbols
 import sympy.core.mul
-from sympy.physics.quantum.algebraicoperation import AlgebraicOperation, opAdd, opMul, opPow
+from sympy.physics.quantum.abstractalgebra import AbstractAlgebra, opAdd, opMul, opPow
 from sympy.core.numbers import I
 from sympy.matrices import Matrix, ImmutableDenseMatrix
 from sympy.printing.latex import latex
@@ -164,7 +164,7 @@ def test_pauli_operators_multiplication_with_labels():
     assert qsimplify_pauli( sy1 * sz1 * sz2 * sx2 ) == -sx1 * sy2
 
 
-def test_pauli_power_qcore():
+def test_pauli_instances():
     ( a, b, c ) = symbols( 'a b c' )
     mul_expr_xy = sx1 * sx2
     mul_expr_xz = sy1 * sz2
@@ -177,9 +177,9 @@ def test_pauli_power_qcore():
     assert isinstance( mul_expr_xz, opMul )
     assert isinstance( mul_expr_yz, opMul )
 
-    assert isinstance( mul_expr_xy, AlgebraicOperation )
-    assert isinstance( mul_expr_xz, AlgebraicOperation )
-    assert isinstance( mul_expr_yz, AlgebraicOperation )
+    assert isinstance( mul_expr_xy, AbstractAlgebra )
+    assert isinstance( mul_expr_xz, AbstractAlgebra )
+    assert isinstance( mul_expr_yz, AbstractAlgebra )
 
     assert isinstance( mul_expr_xy, sympy.core.mul.Mul )
     assert isinstance( mul_expr_xz, sympy.core.mul.Mul )
@@ -189,20 +189,20 @@ def test_pauli_power_qcore():
     assert isinstance( add_expr_xz, opAdd )
     assert isinstance( add_expr_yz, opAdd )
 
-    assert isinstance( add_expr_xy, AlgebraicOperation )
-    assert isinstance( add_expr_xz, AlgebraicOperation )
-    assert isinstance( add_expr_yz, AlgebraicOperation )
+    assert isinstance( add_expr_xy, AbstractAlgebra )
+    assert isinstance( add_expr_xz, AbstractAlgebra )
+    assert isinstance( add_expr_yz, AbstractAlgebra )
 
     assert isinstance( add_expr_xy, sympy.core.add.Add )
     assert isinstance( add_expr_xz, sympy.core.add.Add )
     assert isinstance( add_expr_yz, sympy.core.add.Add )
 
     assert isinstance( mul_expr_xy ** b, opPow )
-    assert isinstance( mul_expr_xy ** b, AlgebraicOperation )
+    assert isinstance( mul_expr_xy ** b, AbstractAlgebra )
     assert isinstance( mul_expr_xy ** b, sympy.core.power.Pow )
 
     assert isinstance( add_expr_xy ** b, opPow )
-    assert isinstance( add_expr_xy ** b, AlgebraicOperation )
+    assert isinstance( add_expr_xy ** b, AbstractAlgebra )
     assert isinstance( add_expr_xy ** b, sympy.core.power.Pow )
 
 
@@ -243,10 +243,10 @@ def test_pauli_expand():
     RZ = cos( thz / 2 ) * si + i * sin( thz / 2 ) * sz
 
     RYGate = EZ * RZ.subs( {thz:-1 * pi / 2} ) * EX * RX.subs( {thx:thy} ) * EZ * RZ.subs( {thz:pi / 2} )
-    assert isinstance( RYGate, AlgebraicOperation )
-    assert isinstance( RYGate.collect( all ), AlgebraicOperation )
+    assert isinstance( RYGate, AbstractAlgebra )
+    assert isinstance( RYGate.collect( all ), AbstractAlgebra )
     assert collect( RYGate, all ) == RYGate.collect( all )
-    assert isinstance( RYGate.expand(), AlgebraicOperation )
+    assert isinstance( RYGate.expand(), AbstractAlgebra )
     assert collect( RYGate.expand(), all ) == RYGate.expand().collect( all )
 
 
@@ -264,7 +264,6 @@ def test_pauli_collect():
                  ( [( a + d ) * sz + b * d * si + c * si + d * sz, ( si, ), ], ( b * d + c ) * si + ( a + d ) * sz + d * sz, ),
                  ( [sx, ( sx, sy, a, ), ], sx, ),
                 )
-
 
     for ( args, result ) in testcases:
         assert collect( *args ) == result
@@ -332,6 +331,8 @@ def test_commute():
     assert sx.commute( sy ) == Commutator( sx, sy )
     assert sx.commute( sy ).doit() == 2 * I * sz
     assert sy.commute( sz ).doit() == 2 * I * sx
+
+    assert isinstance( Commutator( SigmaZ(), SigmaX() ).doit(), opMul )
 
 
 def test_evalf():
@@ -412,8 +413,7 @@ def test_represent():
     assert represent( sp ) == Matrix( [[0, 1], [0, 0]] )
 
 
-@XFAIL
-def test_pauli_qcore_complete():
+def test_pauli_complete():
     from sympy import cos, sin, pi, I as i
     ( ex, ey, ez ) = symbols( 'ex ey ez' )
     ( thx, thy, thz, thz1, thz2, ) = symbols( 'Tx Ty Tz Tz1 Tz2' )
@@ -430,30 +430,6 @@ def test_pauli_qcore_complete():
     assert FYGate.subs( {thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex} ).expand().simplify() == expected
 
 
-# @XFAIL
-def test_commutator_type_fails():
-    assert isinstance( Commutator( SigmaZ(), SigmaX() ).doit(), opMul )
-
-
 @XFAIL
 def test_commute_fails():
     assert sy.commute( sz ).doit().evalf() == Matrix( [[0, 2.0 * I], [2.0 * I, 0]] )
-
-
-def test_pauli_expandfails():
-    from sympy import cos, sin, pi, I
-    from sympy.physics.quantum.collect import collect
-
-    i = I
-    ( ex, ey, ez ) = symbols( 'ex ey ez' )
-    ( thx, thy, thz, ) = symbols( 'Tx Ty Tz' )
-    all = ( si, sx, sy, sz ) = ( SigmaI(), SigmaX(), SigmaY(), SigmaZ() )
-
-    EX = cos( ex ) * si + i * sin( ex ) * sx
-    RX = cos( thx / 2 ) * si + i * sin( thx / 2 ) * sx
-    EZ = cos( ez ) * si + i * sin( ez ) * sz
-    RZ = cos( thz / 2 ) * si + i * sin( thz / 2 ) * sz
-
-    RYGate = EZ * RZ.subs( {thz:-1 * pi / 2} ) * EX * RX.subs( {thx:thy} ) * EZ * RZ.subs( {thz:pi / 2} )
-    assert isinstance( RYGate.expand(), AlgebraicOperation )  # use of sin,cos returns the core.Add
-    assert collect( RYGate.expand(), all ) == RYGate.expand().collect( all )

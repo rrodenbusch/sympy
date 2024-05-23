@@ -1,3 +1,15 @@
+""" Classes for abstract algebras such as Fields or Operator Algebras
+
+    AbstractAlgebra: base class for the algebra
+    opExpr: elements of the Field
+    opAdd: addition operator for the Field; assumed to be commutative and associative
+    opMul: multiplication operator for the Field; assumed to be non-commutative
+    opPow: variant of opMul. Raises Exception if exp <= 0 and inverse does not exist
+    opSymbol: abstract element of the Field based on Symbol
+    op_symbols: function to return a list opSymbol similar to symbols function
+
+"""
+
 from sympy.core.expr import Expr
 import sympy.core.add
 import sympy.core.mul
@@ -6,28 +18,42 @@ import sympy.core.power
 from sympy.core.basic import ordering_of_classes
 
 
-def _all_args( *args, **kwargs ):
+def _all_priority_args( *args, **kwargs ):
     all_args = []
     for o in args:
         if hasattr( o, 'args' ) and len( o.args ):
-            all_args.extend( _all_args( *o.args ) )
-        if hasattr( o, '_op_priority' )  and type( o ) is not AlgebraicOperation:
+            all_args.extend( _all_priority_args( *o.args ) )
+        if hasattr( o, '_op_priority' )  and type( o ) is not AbstractAlgebra:
             all_args.append( o )
     return all_args
 
 
 def _args_top_priority( self, *args, **kwargs ):
-    return max( 10.0, *[x._op_priority for x in _all_args( *self.args, *args )] )
+    return max( 10.0, *[x._op_priority for x in _all_priority_args( *self.args, *args )] )
 
 
 def _top_priority_arg( self, *args, **kwargs ):
-    all_args = _all_args( self, *args )  # *self.args vs self
-    # priority = max( 10.0, *list( [x._op_priority for x in all_args] ) )
+    all_args = _all_priority_args( self, *args )
     priority = max( 10.0, *( [x._op_priority for x in all_args] ) )
     if getattr( self, '_op_priority', 0 ) > priority:
         return self
     arg = next( ( x for x in all_args if x._op_priority == priority ), None )
     return arg
+
+
+def _get_unique_attrs( e, name, deep=True ):
+    # Return a list of all methods from the args list matching name
+    attrs = {}
+    handled = opAdd, opMul, opPow
+    if hasattr( e, 'args' ):
+        for arg in e.args:
+            if isinstance( arg, handled ):
+                arg_attrs = _get_unique_attrs( arg, name )
+                for arg_attr in arg_attrs:
+                    attrs[arg_attr] = 1
+            elif isinstance( arg, opExpr ) and hasattr( arg, name ):
+                attrs[getattr( arg, name )] = 1
+    return attrs.keys()
 
 
 def _no_handler( *args, **kwargs ):
@@ -44,48 +70,86 @@ def binary_op_wrapper( self, other, method_name=None, default=None ):
     return f
 
 
-class AlgebraicOperation( Expr ):
+def _rebuild_expr( expr, deep=True ):
+    """ Restore correct class for any expressions modified to contain core expressions
+
+    This is a simplify helper function to restore any class improperly mapped to Add, Mul, Pow
+    during simplification of composite expression
+
     """
-    Base class for Algebraic Operations (__mul__, etc.).
+    handled = opAdd, opMul, opPow
+    if ( hasattr( expr, 'args' ) and deep ) or not isinstance( expr, handled ):
+        if deep:
+            sargs = [ _rebuild_expr( x, deep=deep ) for x in expr.args ]
+        else:
+            sargs = expr.args[::]
+        arg = _top_priority_arg( expr, *sargs )
+        if expr.is_Add:
+            return getattr( arg, '_add_handler', sympy.core.add.Add )( *sargs )
+        elif expr.is_Mul:
+            return getattr( arg, '_mul_handler', sympy.core.mul.Mul )( *sargs )
+        elif expr.is_Pow:
+            return getattr( arg, '_pow_handler', sympy.core.power.Pow )( *sargs )
+        elif isinstance( expr, AbstractAlgebra ):
+            return expr.func( *sargs )
+    return expr
+
+
+class AbstractAlgebra( Expr ):
+    """
+    Base class for abstract algebras such as Fields or Operator Algebras
 
     Explanation
     ===========
 
-    An AlgebraicOperation is class which can be chosen by the
-    'call_highest_priority' decorator.  Operators derived from this
+    An AbstractAlgebra is class which supports operations chosen by the
+    'call_highest_priority' decorator.  Operations derived from this
     class will adopt the highest _op_priority of all arguments
     and will choose the first argument with the highest priority to
     handle the call. Custom subclasses that want to define their
     own binary special methods should set an _op_priority value
     that is higher than the default.
 
-    **NOTE**:
-    This is a temporary fix, and will eventually be replaced with
-    something better and more powerful.  See issue 5510.
-
-    **Decprecation Note**
-    ..deprecated:: 1.7
-
-       Using arguments that aren't subclasses of :class:`~.Expr` in core
-       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
-       deprecated. See :ref:`non-expr-args-deprecated` for details.
-
     Notes
     =====
 
-    The MutableDenseMatrix does not inherit from Expr and will
-    be excluded from the search for highest priority arguments.
+    NOTE on _op_priority from base.core.expr.Expr
 
-    The class Function does not inspect arguments for the _op_priority
-    of arguments so operations on them may exit an Operator Algebra
-    and revert to a field of Real or Complexes.
+        ***************
+        * Arithmetics *
+        ***************
+        Expr and its subclasses use _op_priority to determine which object
+        passed to a binary special method (__mul__, etc.) will handle the
+        operation. In general, the 'call_highest_priority' decorator will choose
+        the object with the highest _op_priority to handle the call.
+        Custom subclasses that want to define their own binary special methods
+        should set an _op_priority value that is higher than the default.
+
+        **NOTE**:
+        This is a temporary fix, and will eventually be replaced with
+        something better and more powerful.  See issue 5510.
+
+    Note on MutableDenseMatrix
+
+        The MutableDenseMatrix does not inherit from Expr and will
+        be excluded from the search for highest priority arguments.
+
+    Note on sympy.core.function.Function
+        The class Function does not inspect arguments for the _op_priority
+        of arguments so operations on them may exit an Operator Algebra
+        and revert to a field of Real or Complexes.
+
+    Note on sympy.simplify.symplify
+        The simplification function and helpers will force many returns to the core
+        operators (Add, Mul, Pow). After simplification expressions will need to
+        be restored to elements of the Algebra. (see _rebuild_expr)
 
     See Also
     ========
 
     sympy.core.basic.Expr
-    sympy.core.power.Pow
     sympy.matrices.MutableDenseMatrix
+    sympy.core.
 
     """
     # _op_priority = 15.0
@@ -234,9 +298,26 @@ class AlgebraicOperation( Expr ):
         arg = _top_priority_arg( self )
         return getattr( arg, '_collect_handler', _no_handler )( self, syms, *args, **kwargs )
 
-    def __repr__( self ):
-        repr = super().__repr__()
-        return repr
+    # def __repr__( self ):
+    #     repr = super().__repr__()
+    #     return repr
+
+    def simplify( self, *args, **kwargs ):
+        return self.__eval_simplify( *args, **kwargs )
+
+    def __eval_simplify( self, *args, **kwargs ):
+        expr = self
+        if hasattr( self, 'args' ):
+            sfuncs = _get_unique_attrs( self, '_eval_simplify', deep=True )
+            for sfunc in sfuncs:
+                expr = sfunc( expr, *args, **kwargs )
+
+        # Avoid infinite recursion with _eval_simplify
+        expr = Expr.simplify( expr, **kwargs )
+        # Rebuild expression for proper classes
+
+        expr = _rebuild_expr( expr, deep=True )
+        return expr
 
 
 from sympy.core.add import Add
@@ -246,8 +327,7 @@ from sympy import sympify
 from sympy.core.singleton import S
 
 
-# AlgebraicOperation
-class opExpr( AlgebraicOperation ):
+class opExpr( AbstractAlgebra ):
 
     @property
     def _op_priority( self ):
@@ -300,7 +380,7 @@ def op_symbols( names, *args, cls=Symbol, **kwargs ):
     return retvals
 
 
-class opAdd( AlgebraicOperation, Add ):
+class opAdd( AbstractAlgebra, Add ):
     # Note from sympy.core.basic:
     # ===========================
     #     If a class that overrides __eq__() needs to retain the
@@ -320,7 +400,7 @@ class opAdd( AlgebraicOperation, Add ):
     __hash__ = sympy.core.add.Add.__hash__
 
 
-class opMul( AlgebraicOperation, Mul ):
+class opMul( AbstractAlgebra, Mul ):
 
     _class_order = ordering_of_classes.index( 'Mul' )
 
@@ -341,7 +421,7 @@ class opMul( AlgebraicOperation, Mul ):
     __hash__ = sympy.core.mul.Mul.__hash__
 
 
-class opPow( AlgebraicOperation, Pow ):
+class opPow( AbstractAlgebra, Pow ):
 
     _class_order = ordering_of_classes.index( 'Pow' )
 

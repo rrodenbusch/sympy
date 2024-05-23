@@ -18,7 +18,7 @@ from sympy.core.power import Pow
 from sympy import sympify
 from sympy import Symbol
 from sympy.core import Expr, Function
-from .algebraicoperation import opExpr, opAdd, opMul, opPow
+from .abstractalgebra import opExpr, opAdd, opMul, opPow
 
 # from .dagger import Dagger
 from .commutator import Commutator
