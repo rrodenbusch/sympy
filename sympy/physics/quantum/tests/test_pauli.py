@@ -331,6 +331,7 @@ def test_commute():
     assert sx.commute( sy ) == Commutator( sx, sy )
     assert sx.commute( sy ).doit() == 2 * I * sz
     assert sy.commute( sz ).doit() == 2 * I * sx
+    assert sy.commute( sz ).doit().evalf() == Matrix( [[0, 2.0 * I], [2.0 * I, 0]] )
 
     assert isinstance( Commutator( SigmaZ(), SigmaX() ).doit(), opMul )
 
@@ -428,8 +429,3 @@ def test_pauli_complete():
     expected = cos( thy / 2 + ex ) * si + i * sin( thy / 2 + ex ) * sy
 
     assert FYGate.subs( {thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex} ).expand().simplify() == expected
-
-
-@XFAIL
-def test_commute_fails():
-    assert sy.commute( sz ).doit().evalf() == Matrix( [[0, 2.0 * I], [2.0 * I, 0]] )

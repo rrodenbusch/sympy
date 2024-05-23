@@ -391,6 +391,15 @@ class opAdd( AbstractAlgebra, Add ):
     #     just as if __hash__ had been explicitly set to None.
 
     _class_order = ordering_of_classes.index( 'Add' )
+    precedence = 40
+
+    def __new__( cls, *args, **kwargs ):
+        cls = Add
+        for arg in args:
+            if isinstance( arg, AbstractAlgebra ):
+                cls = opAdd
+                break
+        return Add.__new__( cls, *args, **kwargs )
 
     def __eq__( self, other ):
         if not isinstance( other, opAdd ) and isinstance( other, sympy.core.add.Add ):
@@ -403,6 +412,15 @@ class opAdd( AbstractAlgebra, Add ):
 class opMul( AbstractAlgebra, Mul ):
 
     _class_order = ordering_of_classes.index( 'Mul' )
+    precedence = 50
+
+    def __new__( cls, *args, **kwargs ):
+        cls = Mul
+        for arg in args:
+            if isinstance( arg, AbstractAlgebra ):
+                cls = opMul
+                break
+        return Mul.__new__( cls, *args, **kwargs )
 
     # _args_type = opExpr
     # Note from sympy.core.basic:
@@ -424,6 +442,7 @@ class opMul( AbstractAlgebra, Mul ):
 class opPow( AbstractAlgebra, Pow ):
 
     _class_order = ordering_of_classes.index( 'Pow' )
+    precedence = 60
 
     def __new__( cls, *args, **kwargs ):
         if len( args ) > 1 and sympify( args[1] ) is S.Zero:
@@ -431,7 +450,7 @@ class opPow( AbstractAlgebra, Pow ):
             pow_handler = getattr( arg, '_pow_handler', _no_handler )
             if pow_handler is not opPow:
                 return pow_handler( args[0], args[1] )
-        obj = super().__new__( cls, *args, **kwargs )
+        obj = Pow.__new__( cls, *args, **kwargs )
         return obj
 
     # Note from sympy.core.basic:
