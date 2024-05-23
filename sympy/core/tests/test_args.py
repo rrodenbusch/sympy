@@ -3817,70 +3817,50 @@ def test_sympy__physics__quantum__fermion__FermionFockBra():
     from sympy.physics.quantum.fermion import FermionFockBra
     assert _test_args(FermionFockBra(1))
 
-#
-# @SKIP("abstract Class")
-# def test_sympy__physics_quantum__qalgebras__BinaryMethod():
-#     from sympy.core.binarymethod import BinaryMethod
-#     assert _test_args(BinaryMethod())
-#
-# # @SKIP("abstract class")
-# def test_sympy__physics__quantum__qcore__QCore():
-#     from sympy.physics.quantum.qcore import QCore
-#     assert _test_args(QCore())
-#
-# # @SKIP("abstract class")
-# def test_sympy__physics__quantum__qcore__Add():
-#     from sympy.physics.quantum.qcore import Add
-#     from sympy.physics.quantum.pauli import SigmaX, SigmaY
-#     assert _test_args(Add(SigmaX(), SigmaY()))
-#
-# # @SKIP("abstract class")
-# def test_sympy__physics__quantum__qcore__Mul():
-#     from sympy.physics.quantum.qcore import Mul
-#     from sympy.physics.quantum.pauli import SigmaX, SigmaY
-#     assert _test_args(Mul(SigmaX(), SigmaY()))
-#
-# # @SKIP("abstract class")
-# def test_sympy__physics__quantum__qcore__Pow():
-#     from sympy.physics.quantum.qcore import Pow
-#     from sympy.physics.quantum.pauli import SigmaX
-#     assert _test_args(Pow(SigmaX(), 2))
 
-def test_sympy__physics__quantum__algebraicoperation__AlgebraicOperation():
-    from sympy.physics.quantum.algebraicoperation import AlgebraicOperation
-    assert _test_args(AlgebraicOperation())
+def test_sympy__physics__quantum__abstractalgebra__AbstractAlgebra():
+    from sympy.physics.quantum.abstractalgebra import AbstractAlgebra
+    assert _test_args(AbstractAlgebra())
 
-def test_sympy__physics__quantum__algebraicoperation__opExpr():
-    from sympy.physics.quantum.algebraicoperation import opExpr
+
+def test_sympy__physics__quantum__abstractalgebra__opExpr():
+    from sympy.physics.quantum.abstractalgebra import opExpr
     assert _test_args(opExpr())
 
-def test_sympy__physics__quantum__algebraicoperation__opAdd():
-    from sympy.physics.quantum.algebraicoperation import opAdd
+
+def test_sympy__physics__quantum__abstractalgebra__opAdd():
+    from sympy.physics.quantum.abstractalgebra import opAdd
     assert _test_args(opAdd(a,b))
 
-def test_sympy__physics__quantum__algebraicoperation__opMul():
-    from sympy.physics.quantum.algebraicoperation import opMul
+def test_sympy__physics__quantum__abstractalgebra__opMul():
+    from sympy.physics.quantum.abstractalgebra import opMul
     assert _test_args(opMul(a,b))
 
-def test_sympy__physics__quantum__algebraicoperation__opPow():
-    from sympy.physics.quantum.algebraicoperation import opPow
+
+def test_sympy__physics__quantum__abstractalgebra__opPow():
+    from sympy.physics.quantum.abstractalgebra import opPow
     assert _test_args(opPow(a,b))
 
-def test_sympy__physics__quantum__algebraicoperation__opSymbol():
-    from sympy.physics.quantum.algebraicoperation import opSymbol
+
+def test_sympy__physics__quantum__abstractalgebra__opSymbol():
+    from sympy.physics.quantum.abstractalgebra import opSymbol
     assert _test_args(opSymbol('A'))
+
 
 def test_sympy__physics__quantum__pauli__SigmaOpBase():
     from sympy.physics.quantum.pauli import SigmaOpBase
     assert _test_args(SigmaOpBase())
 
+
 def test_sympy__physics__quantum__pauli__SigmaI():
     from sympy.physics.quantum.pauli import SigmaI
     assert _test_args(SigmaI())
 
+
 def test_sympy__physics__quantum__pauli__SigmaX():
     from sympy.physics.quantum.pauli import SigmaX
     assert _test_args(SigmaX())
+
 
 def test_sympy__physics__quantum__pauli__SigmaY():
     from sympy.physics.quantum.pauli import SigmaY

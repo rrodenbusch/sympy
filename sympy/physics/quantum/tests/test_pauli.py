@@ -26,7 +26,7 @@ from sympy.physics.quantum.pauli import ( SigmaOpBase, SigmaI, SigmaX, SigmaY, S
                                          SigmaMinus, SigmaPlus,
                                          qsimplify_pauli, qcollect_pauli )
 from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 si, sx, sy, sz = SigmaI(), SigmaX(), SigmaY(), SigmaZ()
 si1, sx1, sy1, sz1 = SigmaI( 1 ), SigmaX( 1 ), SigmaY( 1 ), SigmaZ( 1 )

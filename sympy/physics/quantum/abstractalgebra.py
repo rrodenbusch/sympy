@@ -152,14 +152,6 @@ class AbstractAlgebra( Expr ):
     sympy.core.
 
     """
-    # _op_priority = 15.0
-
-    # @property
-    # def identity(self):
-    #     return self._identity
-    # @identity.setter
-    # def identity(self, value):
-    #     self._identity = value
 
     @property
     def _op_priority( self ):
@@ -218,8 +210,6 @@ class AbstractAlgebra( Expr ):
         return getattr( arg, '_pow_handler', _no_handler )( other, self )
 
     def __truediv__( self, other ):
-        # if other is S.One:
-        #     return self
         arg = _top_priority_arg( self, other )
         denom = getattr( arg, '_pow_handler', _no_handler )( other, S.NegativeOne )
         if self is S.One:
@@ -235,7 +225,8 @@ class AbstractAlgebra( Expr ):
         else:
             return getattr( arg, '_mul_handler', _no_handler )( other, denom )
 
-    # Methods from Expr (__pos__, __abs__, __mod__, __rmod__, __floordiv__, __rfloordiv__, __divmod__, __rdivmod__ )
+    # Methods from Expr current not supported include:
+    #    (__pos__, __abs__, __mod__, __rmod__, __floordiv__, __rfloordiv__, __divmod__, __rdivmod__ )
 
     def compare( self, other ):
         """ Return -1, 0, 1 if the object is less than, equal, greater than """
@@ -298,10 +289,6 @@ class AbstractAlgebra( Expr ):
         arg = _top_priority_arg( self )
         return getattr( arg, '_collect_handler', _no_handler )( self, syms, *args, **kwargs )
 
-    # def __repr__( self ):
-    #     repr = super().__repr__()
-    #     return repr
-
     def simplify( self, *args, **kwargs ):
         return self.__eval_simplify( *args, **kwargs )
 
@@ -315,7 +302,6 @@ class AbstractAlgebra( Expr ):
         # Avoid infinite recursion with _eval_simplify
         expr = Expr.simplify( expr, **kwargs )
         # Rebuild expression for proper classes
-
         expr = _rebuild_expr( expr, deep=True )
         return expr
 
