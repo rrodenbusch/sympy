@@ -300,7 +300,6 @@ class Mul(Expr, AssocOp):
                             arb = cls(a*r, b, evaluate=False)
                         rv = [arb], [], None
                     elif global_parameters.distribute and b.is_commutative:
-                        # newb = Add(*[_keep_coeff(a, bi) for bi in b.args])
                         add_handler  = _binary_op_wrapper(a, b, '_add_handler', Add)
                         newb = add_handler(*[_keep_coeff(a, bi) for bi in b.args])
                         rv = [newb], [], None
@@ -920,7 +919,6 @@ class Mul(Expr, AssocOp):
         left = Mul._expandsums(sums[:L//2])
         right = Mul._expandsums(sums[L//2:])
 
-        # terms = [Mul(a, b) for a in left for b in right]
         terms = [a*b for a in left for b in right]
         added = Add(*terms)
         return Add.make_args(added)  # it may have collapsed down to one term
@@ -966,7 +964,6 @@ class Mul(Expr, AssocOp):
                     args.append(t)
                 add_handler = getattr(self, '_add_handler', Add)
                 return add_handler(*args)
-                # return Add(*args)
             else:
                 return plain
 

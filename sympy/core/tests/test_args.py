@@ -3823,28 +3823,28 @@ def test_sympy__physics__quantum__abstractalgebra__AbstractAlgebra():
     assert _test_args(AbstractAlgebra())
 
 
-def test_sympy__physics__quantum__abstractalgebra__opExpr():
-    from sympy.physics.quantum.abstractalgebra import opExpr
-    assert _test_args(opExpr())
+def test_sympy__physics__quantum__abstractalgebra__AbstractExpr():
+    from sympy.physics.quantum.abstractalgebra import AbstractExpr
+    assert _test_args(AbstractExpr())
 
 
-def test_sympy__physics__quantum__abstractalgebra__opAdd():
-    from sympy.physics.quantum.abstractalgebra import opAdd
-    assert _test_args(opAdd(a,b))
+def test_sympy__physics__quantum__abstractalgebra__AbstractAdd():
+    from sympy.physics.quantum.abstractalgebra import AbstractAdd
+    assert _test_args(AbstractAdd(a,b))
 
-def test_sympy__physics__quantum__abstractalgebra__opMul():
-    from sympy.physics.quantum.abstractalgebra import opMul
-    assert _test_args(opMul(a,b))
-
-
-def test_sympy__physics__quantum__abstractalgebra__opPow():
-    from sympy.physics.quantum.abstractalgebra import opPow
-    assert _test_args(opPow(a,b))
+def test_sympy__physics__quantum__abstractalgebra__AbstractMul():
+    from sympy.physics.quantum.abstractalgebra import AbstractMul
+    assert _test_args(AbstractMul(a,b))
 
 
-def test_sympy__physics__quantum__abstractalgebra__opSymbol():
-    from sympy.physics.quantum.abstractalgebra import opSymbol
-    assert _test_args(opSymbol('A'))
+def test_sympy__physics__quantum__abstractalgebra__AbstractPow():
+    from sympy.physics.quantum.abstractalgebra import AbstractPow
+    assert _test_args(AbstractPow(a,b))
+
+
+def test_sympy__physics__quantum__abstractalgebra__AbstractSymbol():
+    from sympy.physics.quantum.abstractalgebra import AbstractSymbol
+    assert _test_args(AbstractSymbol('A'))
 
 
 def test_sympy__physics__quantum__pauli__SigmaOpBase():

@@ -1,12 +1,12 @@
 """ Classes for abstract algebras such as Fields or Operator Algebras
 
     AbstractAlgebra: base class for the algebra
-    opExpr: elements of the Field
-    opAdd: addition operator for the Field; assumed to be commutative and associative
-    opMul: multiplication operator for the Field; assumed to be non-commutative
-    opPow: variant of opMul. Raises Exception if exp <= 0 and inverse does not exist
-    opSymbol: abstract element of the Field based on Symbol
-    op_symbols: function to return a list opSymbol similar to symbols function
+    AbstractExpr: elements of the Field
+    AbstractAdd: addition operator for the Field; assumed to be commutative and associative
+    AbstractMul: multiplication operator for the Field; assumed to be non-commutative
+    AbstractPow: variant of AbstractMul. Raises Exception if exp <= 0 and inverse does not exist
+    AbstractSymbol: abstract element of the Field based on Symbol
+    abstract_symbols: function to return a list AbstractSymbol similar to symbols function
 
 """
 
@@ -44,14 +44,14 @@ def _top_priority_arg( self, *args, **kwargs ):
 def _get_unique_attrs( e, name, deep=True ):
     # Return a list of all methods from the args list matching name
     attrs = {}
-    handled = opAdd, opMul, opPow
+    handled = AbstractAdd, AbstractMul, AbstractPow
     if hasattr( e, 'args' ):
         for arg in e.args:
             if isinstance( arg, handled ):
                 arg_attrs = _get_unique_attrs( arg, name )
                 for arg_attr in arg_attrs:
                     attrs[arg_attr] = 1
-            elif isinstance( arg, opExpr ) and hasattr( arg, name ):
+            elif isinstance( arg, AbstractExpr ) and hasattr( arg, name ):
                 attrs[getattr( arg, name )] = 1
     return attrs.keys()
 
@@ -70,17 +70,17 @@ def binary_op_wrapper( self, other, method_name=None, default=None ):
     return f
 
 
-def _rebuild_expr( expr, deep=True ):
+def rebuild_expr( expr, deep=True ):
     """ Restore correct class for any expressions modified to contain core expressions
 
     This is a simplify helper function to restore any class improperly mapped to Add, Mul, Pow
     during simplification of composite expression
 
     """
-    handled = opAdd, opMul, opPow
+    handled = AbstractAdd, AbstractMul, AbstractPow
     if ( hasattr( expr, 'args' ) and deep ) or not isinstance( expr, handled ):
         if deep:
-            sargs = [ _rebuild_expr( x, deep=deep ) for x in expr.args ]
+            sargs = [ rebuild_expr( x, deep=deep ) for x in expr.args ]
         else:
             sargs = expr.args[::]
         arg = _top_priority_arg( expr, *sargs )
@@ -142,7 +142,7 @@ class AbstractAlgebra( Expr ):
     Note on sympy.simplify.symplify
         The simplification function and helpers will force many returns to the core
         operators (Add, Mul, Pow). After simplification expressions will need to
-        be restored to elements of the Algebra. (see _rebuild_expr)
+        be restored to elements of the Algebra. (see rebuild_expr)
 
     See Also
     ========
@@ -159,15 +159,15 @@ class AbstractAlgebra( Expr ):
 
     @property
     def _add_handler( self ):
-        return opAdd
+        return AbstractAdd
 
     @property
     def _mul_handler( self ):
-        return opMul
+        return AbstractMul
 
     @property
     def _pow_handler( self ):
-        return opPow
+        return AbstractPow
 
     def __neg__( self ):
         arg = _top_priority_arg( self, )
@@ -277,13 +277,13 @@ class AbstractAlgebra( Expr ):
 
     # Expr evaluation hint methods.  Calls Expr._eval_expand_'hint'
     def _eval_add( self, other ):
-        return opAdd( self, other, evaluate=False )
+        return AbstractAdd( self, other, evaluate=False )
 
     def _eval_mul( self, other ):
-        return opMul( self, other, evaluate=False )
+        return AbstractMul( self, other, evaluate=False )
 
     def _eval_power( self, e ):
-        return opPow( self, e, evaluate=False )
+        return AbstractPow( self, e, evaluate=False )
 
     def collect( self, syms, *args, **kwargs ):
         arg = _top_priority_arg( self )
@@ -302,7 +302,7 @@ class AbstractAlgebra( Expr ):
         # Avoid infinite recursion with _eval_simplify
         expr = Expr.simplify( expr, **kwargs )
         # Rebuild expression for proper classes
-        expr = _rebuild_expr( expr, deep=True )
+        expr = rebuild_expr( expr, deep=True )
         return expr
 
 
@@ -313,24 +313,24 @@ from sympy import sympify
 from sympy.core.singleton import S
 
 
-class opExpr( AbstractAlgebra ):
+class AbstractExpr( AbstractAlgebra ):
 
     @property
     def _op_priority( self ):
-        return 20.0  # Above basic, matrices, algebraic operators, but below opAdd, opMul,
+        return 20.0  # Above basic, matrices, algebraic operators, but below AbstractAdd, AbstractMul,
 
     def __radd__( self, other, *args, **kwargs ):
-        return opAdd( other, self, *args, **kwargs )
+        return AbstractAdd( other, self, *args, **kwargs )
 
     def __add__( self, *args, **kwargs ):
-        return opAdd( self, *args, **kwargs )
+        return AbstractAdd( self, *args, **kwargs )
 
     def __sub__( self, other ):
-        obj = opAdd( self, -other )
+        obj = AbstractAdd( self, -other )
         return obj
 
     def __rsub__( self, other ):
-        obj = opAdd( other, -self )
+        obj = AbstractAdd( other, -self )
         return obj
 
     def __neg__( self ):
@@ -338,35 +338,35 @@ class opExpr( AbstractAlgebra ):
         # create a 2-args Mul with the -1 in the canonical
         # slot 0.
         c = self.is_commutative
-        obj = opMul._from_args( ( S.NegativeOne, self ), c )
+        obj = AbstractMul._from_args( ( S.NegativeOne, self ), c )
         return obj
 
     def __mul__( self, *args, **kwargs ):
-        return opMul( self, *args, **kwargs )
+        return AbstractMul( self, *args, **kwargs )
 
     def __rmul__( self, other, *args, **kwargs ):
-        return opMul( other, self, *args, **kwargs )
+        return AbstractMul( other, self, *args, **kwargs )
 
     def __pow__( self, *args, **kwargs ):
-        return opPow( self, *args, **kwargs )
+        return AbstractPow( self, *args, **kwargs )
 
 
 from sympy.core.symbol import Symbol, symbols
 
 
-class opSymbol( Symbol, opExpr ):
+class AbstractSymbol( Symbol, AbstractExpr ):
     """ Symbol class to ensure symbols remain in the Ring """
     # Add property to support operator compare since adding
     # the new class name to the ordering_of_classes list in basic
     _class_order = ordering_of_classes.index( 'Symbol' )
 
 
-def op_symbols( names, *args, cls=Symbol, **kwargs ):
-    retvals = symbols( names, *args, cls=opSymbol, **kwargs )
+def abstract_symbols( names, *args, cls=Symbol, **kwargs ):
+    retvals = symbols( names, *args, cls=AbstractSymbol, **kwargs )
     return retvals
 
 
-class opAdd( AbstractAlgebra, Add ):
+class AbstractAdd( AbstractAlgebra, Add ):
     # Note from sympy.core.basic:
     # ===========================
     #     If a class that overrides __eq__() needs to retain the
@@ -383,19 +383,19 @@ class opAdd( AbstractAlgebra, Add ):
         cls = Add
         for arg in args:
             if isinstance( arg, AbstractAlgebra ):
-                cls = opAdd
+                cls = AbstractAdd
                 break
         return Add.__new__( cls, *args, **kwargs )
 
     def __eq__( self, other ):
-        if not isinstance( other, opAdd ) and isinstance( other, sympy.core.add.Add ):
-            other = opAdd( *other.args )
+        if not isinstance( other, AbstractAdd ) and isinstance( other, sympy.core.add.Add ):
+            other = AbstractAdd( *other.args )
         return super().__eq__( other )
 
     __hash__ = sympy.core.add.Add.__hash__
 
 
-class opMul( AbstractAlgebra, Mul ):
+class AbstractMul( AbstractAlgebra, Mul ):
 
     _class_order = ordering_of_classes.index( 'Mul' )
     precedence = 50
@@ -404,11 +404,11 @@ class opMul( AbstractAlgebra, Mul ):
         cls = Mul
         for arg in args:
             if isinstance( arg, AbstractAlgebra ):
-                cls = opMul
+                cls = AbstractMul
                 break
         return Mul.__new__( cls, *args, **kwargs )
 
-    # _args_type = opExpr
+    # _args_type = AbstractExpr
     # Note from sympy.core.basic:
     # ===========================
     #     If a class that overrides __eq__() needs to retain the
@@ -418,14 +418,14 @@ class opMul( AbstractAlgebra, Mul ):
     #     Otherwise the inheritance of __hash__() will be blocked,
     #     just as if __hash__ had been explicitly set to None.
     def __eq__( self, other ):
-        if not isinstance( other, opMul ) and isinstance( other, sympy.core.mul.Mul ):
-            other = opMul( *other.args )
+        if not isinstance( other, AbstractMul ) and isinstance( other, sympy.core.mul.Mul ):
+            other = AbstractMul( *other.args )
         return super().__eq__( other )
 
     __hash__ = sympy.core.mul.Mul.__hash__
 
 
-class opPow( AbstractAlgebra, Pow ):
+class AbstractPow( AbstractAlgebra, Pow ):
 
     _class_order = ordering_of_classes.index( 'Pow' )
     precedence = 60
@@ -434,7 +434,7 @@ class opPow( AbstractAlgebra, Pow ):
         if len( args ) > 1 and sympify( args[1] ) is S.Zero:
             arg = _top_priority_arg( args[0], args[1] )
             pow_handler = getattr( arg, '_pow_handler', _no_handler )
-            if pow_handler is not opPow:
+            if pow_handler is not AbstractPow:
                 return pow_handler( args[0], args[1] )
         obj = Pow.__new__( cls, *args, **kwargs )
         return obj
@@ -449,7 +449,7 @@ class opPow( AbstractAlgebra, Pow ):
     #     just as if __hash__ had been explicitly set to None.
     def __eq__( self, other ):
         if not isinstance( other, Pow ) and isinstance( other, sympy.core.power.Pow ):
-            other = opPow( *other.args )
+            other = AbstractPow( *other.args )
         return super().__eq__( other )
 
     __hash__ = sympy.core.power.Pow.__hash__
@@ -459,9 +459,9 @@ def _set_evalf_entry():
     """ Add the evalf processor functions to the global table """
     from sympy.core.evalf import evalf_table, evalf_add, evalf_mul, evalf_pow
     global evalf_table
-    evalf_table[opAdd] = evalf_add
-    evalf_table[opMul] = evalf_mul
-    evalf_table[opPow] = evalf_pow
+    evalf_table[AbstractAdd] = evalf_add
+    evalf_table[AbstractMul] = evalf_mul
+    evalf_table[AbstractPow] = evalf_pow
 
 
 _set_evalf_entry()

@@ -18,9 +18,8 @@ from sympy.core.power import Pow
 from sympy import sympify
 from sympy import Symbol
 from sympy.core import Expr, Function
-from .abstractalgebra import opExpr, opAdd, opMul, opPow
+from .abstractalgebra import AbstractExpr, AbstractAdd, AbstractMul, AbstractPow
 
-# from .dagger import Dagger
 from .commutator import Commutator
 
 from sympy.core.numbers import I
@@ -63,14 +62,14 @@ def _pauli_pow( base, other, *args, **kwargs ):
                 return SigmaI( names[0] )
         raise NoInverseError( f'({base}) has no inverse there Expr**0 is undefined' )
     else:
-        return opPow( base, other )  # core will override the types on evaluation
+        return AbstractPow( base, other )  # core will override the types on evaluation
     return NotImplemented
 
 
-class SigmaOpBase( opExpr, Operator ):
+class SigmaOpBase( AbstractExpr, Operator ):
     """Pauli sigma operator, base class
 
-    Include AlgebraicOperators opAdd, opMul, and opPow to ensure the OperatorAlgebra
+    Include AlgebraicOperators AbstractAdd, AbstractMul, and AbstractPow to ensure the OperatorAlgebra
     processes as a Ring
 
     """
@@ -785,14 +784,14 @@ def _qsimplify_pauli_product( a, b ):
     Internal helper function for simplifying products of Pauli operators.
     """
     if not ( isinstance( a, SigmaOpBase ) and isinstance( b, SigmaOpBase ) ):
-        return opMul( a, b )
+        return AbstractMul( a, b )
 
     if a.name != b.name:
         # Pauli matrices with different labels commute; sort by name
         if a.name < b.name:
-            return opMul( a, b )
+            return AbstractMul( a, b )
         else:
-            return opMul( b, a )
+            return AbstractMul( b, a )
 
     elif isinstance( a, SigmaI ):
 
@@ -946,10 +945,10 @@ def qsimplify_pauli( e, *args, **kwargs ):
         return e
 
     if isinstance( e, ( Add ) ):
-        return opAdd( *( qsimplify_pauli( arg ) for arg in e.args ) )
+        return AbstractAdd( *( qsimplify_pauli( arg ) for arg in e.args ) )
 
     if isinstance( e, ( Pow ) ):
-        return opPow( *( qsimplify_pauli( arg ) for arg in e.args ) )
+        return AbstractPow( *( qsimplify_pauli( arg ) for arg in e.args ) )
 
     if isinstance( e, ( exp ) ):
         t = type( e )
@@ -971,12 +970,12 @@ def qsimplify_pauli( e, *args, **kwargs ):
                 x = nc.pop( 0 )
                 y = _qsimplify_pauli_product( curr, x )
                 c1, nc1 = y.args_cnc()
-                curr = opMul( *nc1 )
+                curr = AbstractMul( *nc1 )
                 c = c + c1
 
             nc_s.append( curr )
 
-        return opMul( *c ) * opMul( *nc_s )
+        return AbstractMul( *c ) * AbstractMul( *nc_s )
 
     return e
 
@@ -1036,7 +1035,7 @@ def qcollect_pauli( e, ops=None, *args, **kwargs ):
             if arg.args[-1] in ops:
                 idx = ops.index( arg.args[-1] )
                 if len( arg.args[:-1] ) > 1:
-                    coefs[idx].append( opMul( *arg.args[:-1] ) )
+                    coefs[idx].append( AbstractMul( *arg.args[:-1] ) )
                 elif len( arg.args[:-1] ):
                         coefs[idx].append( arg.args[:-1][0] )
                 else:
@@ -1048,8 +1047,8 @@ def qcollect_pauli( e, ops=None, *args, **kwargs ):
 
     for idx in range( len( ops ) ):
         if len( coefs[idx] ) == 1:
-            args.append( opMul( coefs[idx][0], ops[idx] ) )
+            args.append( AbstractMul( coefs[idx][0], ops[idx] ) )
         elif len( coefs[idx] ):
-            args.append( opMul( opAdd( *coefs[idx] ), ops[idx] ) )
+            args.append( AbstractMul( AbstractAdd( *coefs[idx] ), ops[idx] ) )
 
-    return opAdd( *args )
+    return AbstractAdd( *args )

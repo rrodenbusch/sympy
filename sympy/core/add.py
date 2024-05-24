@@ -32,10 +32,7 @@ def _could_extract_minus_sign(expr):
 
 def _addsort(args):
     # in-place sorting of args
-    args2 = args[::]
     args.sort(key=_args_sortkey)
-    if args == args2:
-        pass
 
 
 def _unevaluated_Add(*args):
@@ -346,10 +343,8 @@ class Add(Expr, AssocOp):
                     newseq.append(mul_handler(c, s, evaluate=False))
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
-                    # newseq.append(Mul(c, s))
-                    # mul_handler = _binary_op_wrapper(c,s,'_mul_handler',Mul)
-                    # newseq.append( mul_handler(c,s) )
-                    newseq.append( c * s )
+                    mul_handler = _binary_op_wrapper(c,s,'_mul_handler',Mul)
+                    newseq.append( mul_handler(c,s) )
 
             noncommutative = noncommutative or not s.is_commutative
 

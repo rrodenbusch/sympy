@@ -4,11 +4,7 @@
     See XFAIL test cases for TBD enhancements. Some changes may be
     internal to AbstractAlgebra classes
 
-    Commutators return core.Mul sometimes
-        forced type conversion in __eq__ hides issue
-        @XFAIL test_commutator_type_fails()
-
-    evalf() of matrix inside opMul doesn't expand into matrix
+    evalf() of matrix inside AbstractMul doesn't expand into matrix
     evalf() -> Function() class [e.g. sin() exits the Ring]
     expand().simplify()
 
@@ -16,7 +12,7 @@
 
 from sympy import symbols
 import sympy.core.mul
-from sympy.physics.quantum.abstractalgebra import AbstractAlgebra, opAdd, opMul, opPow
+from sympy.physics.quantum.abstractalgebra import AbstractAlgebra, AbstractAdd, AbstractMul, AbstractPow
 from sympy.core.numbers import I
 from sympy.matrices import Matrix, ImmutableDenseMatrix
 from sympy.printing.latex import latex
@@ -173,9 +169,9 @@ def test_pauli_instances():
     add_expr_xz = sy1 + sz2
     add_expr_yz = sy1 + sz2
 
-    assert isinstance( mul_expr_xy, opMul )
-    assert isinstance( mul_expr_xz, opMul )
-    assert isinstance( mul_expr_yz, opMul )
+    assert isinstance( mul_expr_xy, AbstractMul )
+    assert isinstance( mul_expr_xz, AbstractMul )
+    assert isinstance( mul_expr_yz, AbstractMul )
 
     assert isinstance( mul_expr_xy, AbstractAlgebra )
     assert isinstance( mul_expr_xz, AbstractAlgebra )
@@ -185,9 +181,9 @@ def test_pauli_instances():
     assert isinstance( mul_expr_xz, sympy.core.mul.Mul )
     assert isinstance( mul_expr_yz, sympy.core.mul.Mul )
 
-    assert isinstance( add_expr_xy, opAdd )
-    assert isinstance( add_expr_xz, opAdd )
-    assert isinstance( add_expr_yz, opAdd )
+    assert isinstance( add_expr_xy, AbstractAdd )
+    assert isinstance( add_expr_xz, AbstractAdd )
+    assert isinstance( add_expr_yz, AbstractAdd )
 
     assert isinstance( add_expr_xy, AbstractAlgebra )
     assert isinstance( add_expr_xz, AbstractAlgebra )
@@ -197,11 +193,11 @@ def test_pauli_instances():
     assert isinstance( add_expr_xz, sympy.core.add.Add )
     assert isinstance( add_expr_yz, sympy.core.add.Add )
 
-    assert isinstance( mul_expr_xy ** b, opPow )
+    assert isinstance( mul_expr_xy ** b, AbstractPow )
     assert isinstance( mul_expr_xy ** b, AbstractAlgebra )
     assert isinstance( mul_expr_xy ** b, sympy.core.power.Pow )
 
-    assert isinstance( add_expr_xy ** b, opPow )
+    assert isinstance( add_expr_xy ** b, AbstractPow )
     assert isinstance( add_expr_xy ** b, AbstractAlgebra )
     assert isinstance( add_expr_xy ** b, sympy.core.power.Pow )
 
@@ -210,22 +206,22 @@ def test_pauli_power_quantum():
     ( a, b ) = symbols( 'a:b' )
     ax = a * SigmaX()
     by = a * SigmaY()
-    assert isinstance( a * SigmaI() * SigmaY(), opMul )
-    assert isinstance( a * SigmaI() + b * SigmaI(), opAdd )
-    assert isinstance( SigmaX() ** a, opPow )
+    assert isinstance( a * SigmaI() * SigmaY(), AbstractMul )
+    assert isinstance( a * SigmaI() + b * SigmaI(), AbstractAdd )
+    assert isinstance( SigmaX() ** a, AbstractPow )
     assert ( a * SigmaX() + b * SigmaY() ) ** 0 == SigmaI()
-    assert opPow( a * SigmaX() + b * SigmaY(), 0 ) == SigmaI()
+    assert AbstractPow( a * SigmaX() + b * SigmaY(), 0 ) == SigmaI()
 
     assert SigmaX() ** 0 == SigmaI()
     assert ( SigmaX() + SigmaY() ) ** 0 == SigmaI()
     assert ( SigmaX() * SigmaY() ) ** 0 == SigmaI()
     assert ( a * SigmaX() + b * SigmaY() ) ** 0 == SigmaI()
 
-    assert opPow( sx, a ).subs( a, 0 ) == si
-    assert opPow( sx1, a ).subs( a, 0 ) == si1
-    assert opPow( sx, a ).subs( a, b ) == sx ** b
+    assert AbstractPow( sx, a ).subs( a, 0 ) == si
+    assert AbstractPow( sx1, a ).subs( a, 0 ) == si1
+    assert AbstractPow( sx, a ).subs( a, b ) == sx ** b
 
-    assert isinstance( ax * by, opMul )
+    assert isinstance( ax * by, AbstractMul )
 
 
 def test_pauli_expand():
@@ -333,7 +329,7 @@ def test_commute():
     assert sy.commute( sz ).doit() == 2 * I * sx
     assert sy.commute( sz ).doit().evalf() == Matrix( [[0, 2.0 * I], [2.0 * I, 0]] )
 
-    assert isinstance( Commutator( SigmaZ(), SigmaX() ).doit(), opMul )
+    assert isinstance( Commutator( SigmaZ(), SigmaX() ).doit(), AbstractMul )
 
 
 def test_evalf():
