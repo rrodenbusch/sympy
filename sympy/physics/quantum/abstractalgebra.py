@@ -61,6 +61,30 @@ def _no_handler( *args, **kwargs ):
     return NotImplemented
 
 
+def get_algebra( *args, **kwargs ):
+    """ TODO: Need to make sure that the attributes are an AbstractAlgebra,
+            otherwise return None so it is default operations """
+    if len( args ):
+        arg = _top_priority_arg( *args )
+        return BasicAlgebra( _op_priority=getattr( arg, '_op_priority', 10.0 ),
+                             _add_handler=getattr( arg, '_add_handler', _no_handler ),
+                             _mul_handler=getattr( arg, '_mul_handler', _no_handler ),
+                             _pow_handler=getattr( arg, '_pow_handler', _no_handler ),
+                             is_AbstractAlgebra=isinstance( arg, AbstractAlgebra ) )
+    return BasicAlgebra()
+
+
+def check_algebra( cls, *args, **kwargs ):
+    algebra = get_algebra( *args, **kwargs )
+    # check that algebra based on AbstractAlgebra
+    if cls is Add or isinstance( cls, Add ):
+        pass
+    if cls is Mul or isinstance( cls, Mul ):
+        pass
+    if cls is Pow or isinstance( cls, Pow ):
+        pass
+    return ( NotImplemented, algebra )
+
 # def binary_op_wrapper( self, other, method_name=None, default=None ):
 #     if hasattr( other, '_op_priority' ):
 #         if other._op_priority > self._op_priority:
@@ -69,7 +93,6 @@ def _no_handler( *args, **kwargs ):
 #                 return f
 #     f = getattr( self, method_name, default )
 #     return f
-
 
 # def rebuild_expr( expr, deep=True ):
 #     """ Restore correct class for any expressions modified to contain core expressions
@@ -97,7 +120,9 @@ def _no_handler( *args, **kwargs ):
 
 
 def get_algebra( *args, **kwargs ):
-    if len(args):
+    """ TODO: Need to make sure that the attributes are an AbstractAlgebra,
+            otherwise return None so it is default operations """
+    if len( args ):
         arg = _top_priority_arg( *args )
         return BasicAlgebra( _op_priority=getattr( arg, '_op_priority', 10.0 ),
                              _add_handler=getattr( arg, '_add_handler', _no_handler ),
@@ -376,7 +401,6 @@ def abstract_symbols( names, *args, cls=Symbol, **kwargs ):
     retvals = symbols( names, *args, cls=AbstractSymbol, **kwargs )
     return retvals
 
-
 # class AbstractAdd( AbstractAlgebra, Add ):
 #     # Note from sympy.core.basic:
 #     # ===========================
@@ -464,7 +488,6 @@ def abstract_symbols( names, *args, cls=Symbol, **kwargs ):
 #         return super().__eq__( other )
 #
 #     __hash__ = sympy.core.power.Pow.__hash__
-
 
 # def _set_evalf_entry():
 #     """ Add the evalf processor functions to the global table """

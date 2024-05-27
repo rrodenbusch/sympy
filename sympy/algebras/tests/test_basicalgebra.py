@@ -1,7 +1,4 @@
 from sympy.algebras.basicalgebra import BasicAlgebra
-from sympy.physics.quantum.abstractalgebra import _no_handler
-from sympy import ImmutableDenseMatrix, MatAdd, MatMul
-
 
 def test_basicalgebra_construction():
     from sympy.core.add import Add

@@ -24,7 +24,12 @@ from sympy.core.power import Pow
 
 class BasicAlgebra:
 
-    __slots__ = ( '__op_priority', '__add_handler', '__mul_handler', '__pow_handler', )
+    __slots__ = ( '__op_priority', '__add_handler', '__mul_handler', '__pow_handler',
+                  '__is_AbstractAlgebra' )
+
+    @property
+    def is_AbstractAlgebra( self ):
+        return __is_AbstractAlgebra
 
     @property
     def _op_priority( self ):
@@ -71,3 +76,4 @@ class BasicAlgebra:
         self.__add_handler = kwargs.get( '_add_handler', Add )
         self.__mul_handler = kwargs.get( '_mul_handler', Mul )
         self.__pow_handler = kwargs.get( '_pow_handler', Pow )
+        self.__is_AbstractAlgebra = kwargs.get( 'is_AbstractAlgebra', False )

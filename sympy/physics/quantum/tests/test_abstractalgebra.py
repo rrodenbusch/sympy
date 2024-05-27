@@ -1,5 +1,12 @@
-from sympy.algebras.basicalgebra import BasicAlgebra
 from sympy.physics.quantum.abstractalgebra import AbstractAlgebra, get_algebra, _no_handler
+from sympy.algebras.basicalgebra import BasicAlgebra
+
+def test_abstractalgebra_construction():
+    from sympy.core.expr import Expr
+    a = AbstractAlgebra()
+
+    assert isinstance( a, AbstractAlgebra )
+    assert isinstance( a, Expr )
 
 
 def test_get_algebra():
@@ -18,11 +25,3 @@ def test_get_algebra():
     assert m._add_handler is MatAdd
     assert m._mul_handler is MatMul
     assert m._pow_handler is _no_handler
-
-
-def test_abstractalgebra_construction():
-    from sympy.core.expr import Expr
-    a = AbstractAlgebra()
-
-    assert isinstance( a, AbstractAlgebra )
-    assert isinstance( a, Expr )
