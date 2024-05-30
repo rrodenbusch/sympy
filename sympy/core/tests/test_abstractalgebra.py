@@ -1,5 +1,5 @@
-from sympy.physics.quantum.abstractalgebra import AbstractAlgebra, get_algebra, _no_handler
-from sympy.algebras.basicalgebra import BasicAlgebra
+from sympy.core.abstractalgebra import AbstractAlgebra, get_algebra #, check_algebra, _no_handler
+from sympy.core.basicalgebra import BasicAlgebra
 
 def test_abstractalgebra_construction():
     from sympy.core.expr import Expr
@@ -24,4 +24,12 @@ def test_get_algebra():
     assert m._op_priority == 10.001
     assert m._add_handler is MatAdd
     assert m._mul_handler is MatMul
-    assert m._pow_handler is _no_handler
+    assert m._pow_handler is Pow
+
+def test_check_algebra():
+    # from sympy import Add, Mul, Pow, ImmutableDenseMatrix, MatAdd, MatMul
+    # Check for basic, matrix and AbstractExpr
+
+    # ( expr, algebra ) = check_algebra()
+
+    pass

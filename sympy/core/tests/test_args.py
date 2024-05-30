@@ -3818,6 +3818,25 @@ def test_sympy__physics__quantum__fermion__FermionFockBra():
     assert _test_args(FermionFockBra(1))
 
 
+def test_sympy__core__abstractalgebra__AbstractAlgebra():
+    from sympy.core.abstractalgebra import AbstractAlgebra
+    assert _test_args(AbstractAlgebra())
+
+def test_sympy__core__abstractalgebra__AbstractExpr():
+    from sympy.core.abstractalgebra import AbstractExpr
+    assert _test_args(AbstractExpr())
+
+
+def test_sympy__core__abstractalgebra__AbstractSymbol():
+    from sympy.core.abstractalgebra import AbstractSymbol
+    assert _test_args(AbstractSymbol('A'))
+
+
+# def test_sympy__core__basicalgebra__BasicAlgebra():
+#     from sympy.core.basicalgebra import BasicAlgebra
+#     assert _test_args(BasicAlgebra())
+
+
 def test_sympy__physics__quantum__pauli__SigmaOpBase():
     from sympy.physics.quantum.pauli import SigmaOpBase
     assert _test_args(SigmaOpBase())

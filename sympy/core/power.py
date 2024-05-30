@@ -110,13 +110,19 @@ class Pow(Expr):
     """
     is_Pow = True
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ('is_commutative', '_algebra',)
 
     args: tuple[Expr, Expr]
     _args: tuple[Expr, Expr]
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
+        from sympy.core.basicalgebra import check_algebra
+
+        (retval, algebra) = check_algebra(cls, b, e, evaluate=evaluate)
+        if retval is not NotImplemented:
+            return retval
+
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
@@ -208,6 +214,8 @@ class Pow(Expr):
                 if obj is not None:
                     return obj
         obj = Expr.__new__(cls, b, e)
+        if algebra is not None:
+            obj.algebra = algebra
         obj = cls._exec_constructor_postprocessors(obj)
         if not isinstance(obj, Pow):
             return obj
@@ -219,6 +227,37 @@ class Pow(Expr):
             from sympy.functions.elementary.exponential import log
             return log
         return None
+    @property
+    def _op_priority(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._op_priority
+        return super()._op_priority
+
+    @property
+    def _add_handler(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._add_handler
+        return super()._add_handler
+
+    @property
+    def _mul_handler(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._mul_handler
+        return super()._mul_handler
+
+    @property
+    def _pow_handler(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._pow_handler
+        return super()._pow_handler
+
+    @property
+    def algebra(self):
+        return self._algebra
+
+    @algebra.setter
+    def algebra(self, value):
+        self._algebra = value
 
     @property
     def base(self) -> Expr:

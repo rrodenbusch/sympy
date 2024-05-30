@@ -11,11 +11,11 @@
 """
 
 from sympy.core.expr import Expr
-import sympy.core.add
-import sympy.core.mul
-import sympy.core.power
+# import sympy.core.add
+# import sympy.core.mul
+# import sympy.core.power
 
-from sympy.algebras.basicalgebra import BasicAlgebra
+from sympy.core.basicalgebra import BasicAlgebra
 from sympy.core.basic import ordering_of_classes
 
 
@@ -45,7 +45,7 @@ def _top_priority_arg( self, *args, **kwargs ):
 def _get_unique_attrs( e, name, deep=True ):
     # Return a list of all methods from the args list matching name
     attrs = {}
-    handled = AbstractAdd, AbstractMul, AbstractPow
+    handled = () # AbstractAdd, AbstractMul, AbstractPow
     if hasattr( e, 'args' ):
         for arg in e.args:
             if isinstance( arg, handled ):
@@ -70,20 +70,27 @@ def get_algebra( *args, **kwargs ):
                              _add_handler=getattr( arg, '_add_handler', _no_handler ),
                              _mul_handler=getattr( arg, '_mul_handler', _no_handler ),
                              _pow_handler=getattr( arg, '_pow_handler', _no_handler ),
-                             is_AbstractAlgebra=isinstance( arg, AbstractAlgebra ) )
+                             is_AbstractAlgebra=getattr( arg, '_op_priority', 100.0 ) )
     return BasicAlgebra()
 
 
 def check_algebra( cls, *args, **kwargs ):
+    """ Define the abstract algebra and compute result if an abstract algebra is returned
+    """
     algebra = get_algebra( *args, **kwargs )
-    # check that algebra based on AbstractAlgebra
-    if cls is Add or isinstance( cls, Add ):
-        pass
-    if cls is Mul or isinstance( cls, Mul ):
-        pass
-    if cls is Pow or isinstance( cls, Pow ):
-        pass
+    if not algebra.is_AbstractAlgebra:
+        return ( NotImplemented, algebra )
+
     return ( NotImplemented, algebra )
+
+    # # Calculate from the handler and return
+    # if cls is Add or isinstance( cls, Add ):
+    #     pass
+    # if cls is Mul or isinstance( cls, Mul ):
+    #     pass
+    # if cls is Pow or isinstance( cls, Pow ):
+    #     pass
+    # return ( NotImplemented, algebra )
 
 # def binary_op_wrapper( self, other, method_name=None, default=None ):
 #     if hasattr( other, '_op_priority' ):
@@ -119,16 +126,16 @@ def check_algebra( cls, *args, **kwargs ):
 #     return expr
 
 
-def get_algebra( *args, **kwargs ):
-    """ TODO: Need to make sure that the attributes are an AbstractAlgebra,
-            otherwise return None so it is default operations """
-    if len( args ):
-        arg = _top_priority_arg( *args )
-        return BasicAlgebra( _op_priority=getattr( arg, '_op_priority', 10.0 ),
-                             _add_handler=getattr( arg, '_add_handler', _no_handler ),
-                             _mul_handler=getattr( arg, '_mul_handler', _no_handler ),
-                             _pow_handler=getattr( arg, '_pow_handler', _no_handler ), )
-    return BasicAlgebra()
+# def get_algebra( *args, **kwargs ):
+#     """ TODO: Need to make sure that the attributes are an AbstractAlgebra,
+#             otherwise return None so it is default operations """
+#     if len( args ):
+#         arg = _top_priority_arg( *args )
+#         return BasicAlgebra( _op_priority=getattr( arg, '_op_priority', 10.0 ),
+#                              _add_handler=getattr( arg, '_add_handler', _no_handler ),
+#                              _mul_handler=getattr( arg, '_mul_handler', _no_handler ),
+#                              _pow_handler=getattr( arg, '_pow_handler', _no_handler ), )
+#     return BasicAlgebra()
 
 
 class AbstractAlgebra( Expr ):
@@ -342,10 +349,10 @@ class AbstractAlgebra( Expr ):
         return expr
 
 
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy import sympify
+# from sympy.core.add import Add
+# from sympy.core.mul import Mul
+# from sympy.core.power import Pow
+# from sympy import sympify
 from sympy.core.singleton import S
 
 
@@ -353,38 +360,38 @@ class AbstractExpr( AbstractAlgebra ):
 
     @property
     def _op_priority( self ):
-        return 20.0  # Above basic, matrices, algebraic operators, but below AbstractAdd, AbstractMul,
+        return 120.0  # Above basic, matrices, algebraic operators, but below AbstractAdd, AbstractMul,
 
-    def __radd__( self, other, *args, **kwargs ):
-        return AbstractAdd( other, self, *args, **kwargs )
+    # def __radd__( self, other, *args, **kwargs ):
+    #     return AbstractAdd( other, self, *args, **kwargs )
+    #
+    # def __add__( self, *args, **kwargs ):
+    #     return AbstractAdd( self, *args, **kwargs )
+    #
+    # def __sub__( self, other ):
+    #     obj = AbstractAdd( self, -other )
+    #     return obj
+    #
+    # def __rsub__( self, other ):
+    #     obj = AbstractAdd( other, -self )
+    #     return obj
 
-    def __add__( self, *args, **kwargs ):
-        return AbstractAdd( self, *args, **kwargs )
-
-    def __sub__( self, other ):
-        obj = AbstractAdd( self, -other )
-        return obj
-
-    def __rsub__( self, other ):
-        obj = AbstractAdd( other, -self )
-        return obj
-
-    def __neg__( self ):
-        # Mul has its own __neg__ routine, so we just
-        # create a 2-args Mul with the -1 in the canonical
-        # slot 0.
-        c = self.is_commutative
-        obj = AbstractMul._from_args( ( S.NegativeOne, self ), c )
-        return obj
-
-    def __mul__( self, *args, **kwargs ):
-        return AbstractMul( self, *args, **kwargs )
-
-    def __rmul__( self, other, *args, **kwargs ):
-        return AbstractMul( other, self, *args, **kwargs )
-
-    def __pow__( self, *args, **kwargs ):
-        return AbstractPow( self, *args, **kwargs )
+    # def __neg__( self ):
+    #     # Mul has its own __neg__ routine, so we just
+    #     # create a 2-args Mul with the -1 in the canonical
+    #     # slot 0.
+    #     c = self.is_commutative
+    #     obj = AbstractMul._from_args( ( S.NegativeOne, self ), c )
+    #     return obj
+    #
+    # def __mul__( self, *args, **kwargs 1):
+    #     return AbstractMul( self, *args, **kwargs )
+    #
+    # def __rmul__( self, other, *args, **kwargs ):
+    #     return AbstractMul( other, self, *args, **kwargs )
+    #
+    # def __pow__( self, *args, **kwargs ):
+        # return AbstractPow( self, *args, **kwargs )
 
 
 from sympy.core.symbol import Symbol, symbols

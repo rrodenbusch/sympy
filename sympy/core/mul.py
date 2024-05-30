@@ -158,7 +158,7 @@ class Mul(Expr, AssocOp):
     MatMul
 
     """
-    __slots__ = ()
+    __slots__ = ('_algebra',)
 
     args: tTuple[Expr, ...]
 
@@ -166,6 +166,48 @@ class Mul(Expr, AssocOp):
 
     _args_type = Expr
     _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+
+    def __new__(cls, *args, **kwargs):
+        from sympy.core.basicalgebra import check_algebra
+        (retval, algebra) = check_algebra(cls, *args, **kwargs )
+        if retval is NotImplemented:
+            retval = super().__new__(cls, *args, **kwargs)
+            if algebra is not None:
+                retval.algebra = algebra
+        return retval
+
+    @property
+    def _op_priority(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._op_priority
+        return super()._op_priority
+
+    @property
+    def _add_handler(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._add_handler
+        return super()._add_handler
+
+    @property
+    def _mul_handler(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._mul_handler
+        return super()._mul_handler
+
+    @property
+    def _pow_handler(self):
+        if getattr(self,'_algebra', None) is not None:
+            return self._algebra._pow_handler
+        return super()._pow_handler
+
+    @property
+    def algebra(self):
+        return self._algebra
+
+    @algebra.setter
+    def algebra(self, value):
+        self._algebra = value
+
 
     @property
     def kind(self):
