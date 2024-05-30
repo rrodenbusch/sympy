@@ -202,12 +202,11 @@ class Mul(Expr, AssocOp):
 
     @property
     def algebra(self):
-        return self._algebra
+        return getattr(self,'_algebra', None)
 
     @algebra.setter
     def algebra(self, value):
         self._algebra = value
-
 
     @property
     def kind(self):

@@ -25,38 +25,63 @@ from sympy.core.power import Pow
 def _no_handler( *args, **kwargs ):
     return NotImplemented
 
-def default_algebra():
-    return BasicAlgebra(10, Add, Mul, Pow, False )
 
-""" TODO:
-  if argument has an algebra, no need to inspect it's args
-"""
+def default_algebra():
+    return BasicAlgebra( 10, Add, Mul, Pow, False )
+
+
 def _all_priority_args( *args, **kwargs ):
     all_args = []
     for o in args:
-        if hasattr( o, 'args' ) and len( o.args ):
-            all_args.extend( _all_priority_args( *o.args ) )
-        # if hasattr( o, '_op_priority' )  and type( o ) is not AbstractAlgebra:
-        if hasattr( o, '_op_priority' ):
+        algebra = getattr( o, 'algebra', None )
+        if algebra is None:
+            if hasattr( o, 'args' ) and len( o.args ):
+                all_args.extend( _all_priority_args( *o.args ) )
+            if hasattr( o, '_op_priority' ):
+                all_args.append( o )
+        else:
             all_args.append( o )
     return all_args
 
 
-def _top_priority_arg( self, *args, **kwargs ):
-    all_args = _all_priority_args( self, *args )
-    if len(all_args):
-        priority = max( 10.0, *( [x._op_priority for x in all_args] ) )
-        if getattr( self, '_op_priority', 0 ) > priority:
-            return self
-        if len(all_args) == 1:
+def _top_priority_arg( *args, **kwargs ):
+    all_args = _all_priority_args( *args )
+    if len( all_args ):
+        if len( all_args ) == 1:
             return all_args[0]
+        priority = max( 10.0, *( [x._op_priority for x in all_args] ) )
+        # if getattr( self, '_op_priority', 0 ) > priority:
+        #     return self
         arg = next( ( x for x in all_args if x._op_priority == priority ), None )
         return arg
-    return self
+    # return self
+
+
+def get_algebra( *args, **kwargs ):
+    if len( args ):
+        arg = _top_priority_arg( *args )
+        if arg is not None:
+            algebra = getattr( arg, 'algebra', None )
+            if algebra is not None:
+                return algebra
+
+            is_AbstractAlgebra = getattr( arg, '_op_priority', 10 ) > 100
+            if is_AbstractAlgebra:
+                return getattr( arg, 'algebra',
+                               BasicAlgebra( _op_priority=getattr( arg, '_op_priority', 10.0 ),
+                                             _add_handler=getattr( arg, '_add_handler', Add ),
+                                             _mul_handler=getattr( arg, '_mul_handler', Mul ),
+                                             _pow_handler=getattr( arg, '_pow_handler', Pow ),
+                                             is_AbstractAlgebra=True )
+                               )
 
 
 def check_algebra( cls, *args, **kwargs ):
-    """ Define the abstract algebra and compute result if an abstract algebra is returned
+    """ Retrieve an abstract algebra and compute result if a handler is defined.
+
+        Handlers should return NotImplemented to invoke the core operations of Add, Mul, Pow.
+        Directly calling the core operations will result in a recursion error.
+        None is a valid return value.
     """
     algebra = get_algebra( *args, **kwargs )
     if algebra is None:
@@ -64,34 +89,28 @@ def check_algebra( cls, *args, **kwargs ):
 
     # Compute expression if any embedded handlers are not the core Add, Mul, Pow
     # Any handler that wishes to return control the core operations should return NotImplemented
-    # skipped = [Add, Mul, Pow]
+    #     calling the core operations Add, Mul, Pow directly will cause recursion errors.
     return ( NotImplemented, algebra )
 
-    # # Calculate from the handler and return
-    # if cls is Add or isinstance( cls, Add ):
-    #     pass
-    # if cls is Mul or isinstance( cls, Mul ):
-    #     pass
-    # if cls is Pow or isinstance( cls, Pow ):
-    #     pass
-    # return ( NotImplemented, algebra )
+    if isinstance( cls, Add ):
+        handler = getattr( algebra, '_add_handler', _no_handler )
+        if handler == Add:
+            return ( NotImplemented, algebra )
+        else:
+            return ( handler( cls, *args, **kwargs ), algebra )
+    if isinstance( cls, Mul ):
+        handler = getattr( algebra, '_mul_handler', _no_handler )
+        if handler == Mul:
+            return ( NotImplemented, algebra )
+        else:
+            return ( handler( cls, *args, **kwargs ), algebra )
+    if isinstance( cls, Pow ):
+        handler = getattr( algebra, '_pow_handler', _no_handler )
+        if handler == Pow:
+            return ( NotImplemented, algebra )
+        else:
+            return ( handler( cls, *args, **kwargs ), algebra )
 
-
-
-def get_algebra( *args, **kwargs ):
-    """ TODO: Need to make sure that the attributes are an AbstractAlgebra,
-            otherwise return None so it is default operations """
-    if len( args ):
-        arg = _top_priority_arg( *args )
-        is_AbstractAlgebra=getattr( arg, '_op_priority', 10 ) > 100
-        if is_AbstractAlgebra:
-            return getattr(arg, 'algebra',
-                           BasicAlgebra( _op_priority=getattr( arg, '_op_priority', 10.0 ),
-                                         _add_handler=getattr( arg, '_add_handler', Add ),
-                                         _mul_handler=getattr( arg, '_mul_handler', Mul ),
-                                         _pow_handler=getattr( arg, '_pow_handler', Pow ),
-                                         is_AbstractAlgebra=True )
-                           )
 
 class BasicAlgebra:
 
@@ -100,7 +119,6 @@ class BasicAlgebra:
 
     __slots__ = ( '_op_priority', '_add_handler', '_mul_handler', '_pow_handler',
                   'is_AbstractAlgebra' )
-
 
     # @property
     # def is_AbstractAlgebra( self ):
@@ -139,13 +157,13 @@ class BasicAlgebra:
     #     self.__pow_handler = value
 
     def __init__( self, _op_priority=10, _add_handler=Add, _mul_handler=Mul, _pow_handler=Pow,
-                  is_AbstractAlgebra = False ):
+                  is_AbstractAlgebra=False ):
         self._op_priority = _op_priority
         self._add_handler = _add_handler
         self._mul_handler = _mul_handler
         self._pow_handler = _pow_handler
         self.is_AbstractAlgebra = is_AbstractAlgebra
 
-    def _hashable_content(self):
+    def _hashable_content( self ):
         return ( self._op_priority, self._add_handler, self._mul_handler, self._pow_handler,
                  self.is_AbstractAlgebra, )

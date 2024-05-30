@@ -253,7 +253,7 @@ class Pow(Expr):
 
     @property
     def algebra(self):
-        return self._algebra
+        return getattr(self,'_algebra', None)
 
     @algebra.setter
     def algebra(self, value):
