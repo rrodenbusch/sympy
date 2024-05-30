@@ -21,6 +21,7 @@ from sympy.core import Expr
 import sympy.core.add
 import sympy.core.mul
 import sympy.core.power
+from sympy.core.basic import ordering_of_classes
 
 __all__ = [
     'QCore',
@@ -152,6 +153,7 @@ class QCore( Expr ):
 
 
 class Add( QCore, sympy.core.add.Add ):
+    _class_order = ordering_of_classes.index('Add')
 
     @property
     def _op_priority( self ):
@@ -181,6 +183,7 @@ class Add( QCore, sympy.core.add.Add ):
 
 
 class Mul( QCore, sympy.core.mul.Mul ):
+    _class_order = ordering_of_classes.index('Mul')
 
     @property
     def _op_priority( self ):
@@ -217,6 +220,7 @@ class Mul( QCore, sympy.core.mul.Mul ):
 
 
 class Pow( QCore, sympy.core.power.Pow ):
+    _class_order = ordering_of_classes.index('Pow')
 
     @property
     def _op_priority( self ):
