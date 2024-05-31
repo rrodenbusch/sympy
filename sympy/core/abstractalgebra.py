@@ -19,6 +19,18 @@ from sympy.core.basicalgebra import BasicAlgebra
 from sympy.core.basic import ordering_of_classes
 
 
+def _top_arg( *args, priority=0 ):
+    top_arg = None
+    for o in args:
+        if hasattr( o, 'args' ) and len( o.args ):
+            new_arg, new_priority = _top_arg( *o.args, priority=priority )
+            if new_arg is not None:
+                top_arg, priority = ( new_arg, new_priority )
+        if getattr( o, '_op_priority', 0 ) > priority:
+            top_arg, priority = ( o, o._op_priority )
+    return top_arg, priority
+
+
 def _all_priority_args( *args, **kwargs ):
     all_args = []
     for o in args:
@@ -34,18 +46,19 @@ def _args_top_priority( self, *args, **kwargs ):
 
 
 def _top_priority_arg( self, *args, **kwargs ):
-    all_args = _all_priority_args( self, *args )
-    priority = max( 10.0, *( [x._op_priority for x in all_args] ) )
-    if getattr( self, '_op_priority', 0 ) > priority:
-        return self
-    arg = next( ( x for x in all_args if x._op_priority == priority ), None )
+    # all_args = _all_priority_args( self, *args )
+    # priority = max( 10.0, *( [x._op_priority for x in all_args] ) )
+    # if getattr( self, '_op_priority', 0 ) > priority:
+    #     return self
+    # arg = next( ( x for x in all_args if x._op_priority == priority ), None )
+    arg, priority = _top_arg( self, *args )
     return arg
 
 
 def _get_unique_attrs( e, name, deep=True ):
     # Return a list of all methods from the args list matching name
     attrs = {}
-    handled = () # AbstractAdd, AbstractMul, AbstractPow
+    handled = ()  # AbstractAdd, AbstractMul, AbstractPow
     if hasattr( e, 'args' ):
         for arg in e.args:
             if isinstance( arg, handled ):
@@ -124,7 +137,6 @@ def check_algebra( cls, *args, **kwargs ):
 #         elif isinstance( expr, AbstractAlgebra ):
 #             return expr.func( *sargs )
 #     return expr
-
 
 # def get_algebra( *args, **kwargs ):
 #     """ TODO: Need to make sure that the attributes are an AbstractAlgebra,
