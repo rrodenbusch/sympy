@@ -22,7 +22,7 @@ def _top_priority_arg( self, *args, **kwargs ):
     return arg
 
 
-class AlgebraicOperation( Expr ):
+class BinaryMethod( Expr ):
     """
     Base class for Algebraic Operations (__mul__, etc.).
 
@@ -30,7 +30,7 @@ class AlgebraicOperation( Expr ):
     ===========
 
     An AlgebraicOperation is class which can be chosen by the
-    'call_highest_priority' decorator.  Operators derived from this 
+    'call_highest_priority' decorator.  Operators derived from this
     class will adopt the highest _op_priority of all arguments
     and will choose the first argument with the highest priority to
     handle the call. Custom subclasses that want to define their
