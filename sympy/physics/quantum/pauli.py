@@ -100,7 +100,7 @@ class SigmaOpBase( QCore, Operator ):
 
     @property
     def use_name( self ):
-        return bool( self.args[0] ) is not False or ( self.args[0] == 0 )
+        return bool( self._args[0] ) is not False or ( self._args[0] == 0 )
 
     @classmethod
     def default_args( self ):

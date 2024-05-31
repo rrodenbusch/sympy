@@ -246,6 +246,7 @@ def test_pauli_qcore_complete():
     FYGate = EZ * RZ.subs( {thz:thz1} ) * EX * RX.subs( {thx:thy} ) * EZ * RZ.subs( {thz: thz2} )
     expected = cos( thy / 2 + ex ) * si + i * sin( thy / 2 + ex ) * sy
 
+    # result = FYGate.subs( {thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex} ).expand().simplify()
     assert FYGate.subs( {thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex} ).expand().simplify() == expected
 
 

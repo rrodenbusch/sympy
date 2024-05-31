@@ -1,12 +1,24 @@
 from .expr import Expr
 
 
+def _top_arg( *args, priority=0 ):
+    top_arg = None
+    for o in args:
+        if hasattr( o, 'args' ) and len( o.args ):
+            new_arg, new_priority = _top_arg( *o.args, priority=priority )
+            if new_arg is not None:
+                top_arg, priority = ( new_arg, new_priority )
+        if getattr( o, '_op_priority', 0 ) > priority:
+            top_arg, priority = ( o, o._op_priority )
+    return top_arg, priority
+
+
 def _all_args( *args ):
     all_args = []
     for o in args:
         if hasattr( o, 'args' ) and len( o.args ):
             all_args.extend( _all_args( *o.args ) )
-        if hasattr( o, '_op_priority' )  and not isinstance( o, BinaryMethod ):
+        if hasattr( o, '_op_priority' ):  # and not isinstance( o, BinaryMethod ):
             all_args.append( o )
     return all_args
 
@@ -16,9 +28,10 @@ def _args_top_priority( self, *args, **kwargs ):
 
 
 def _top_priority_arg( self, *args, **kwargs ):
-    all_args = _all_args( *self.args, *args )
-    priority = max( 10.0, *[x._op_priority for x in all_args] )
-    arg = next( ( x for x in all_args if x._op_priority == priority ), None )
+    # all_args = _all_args( self, *args )
+    # priority = max( 10.0, *[x._op_priority for x in all_args] )
+    # arg = next( ( x for x in all_args if x._op_priority == priority ), None )
+    arg, priority = _top_arg( self, *args )
     return arg
 
 
