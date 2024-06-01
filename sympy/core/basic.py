@@ -77,11 +77,11 @@ ordering_of_classes = [
     'GreaterThan', 'LessThan',
 ]
 
-def _cmp_name(x: type, y: type) -> int:
+def _cmp_name(x: object, y: object) -> int:
     """return -1, 0, 1 if the name of x is before that of y.
-    A string comparison is done if either name does not appear
-    in `ordering_of_classes`. This is the helper for
-    ``Basic.compare``
+    A string comparison is done if neither appears
+    in `ordering_of_classes` and neither has a _class_order attribute.
+    This is the helper for ``Basic.compare``
 
     Examples
     ========
@@ -101,11 +101,11 @@ def _cmp_name(x: type, y: type) -> int:
 
     """
     # If the other object is not a Basic subclass, then we are not equal to it.
-    if not issubclass(y, Basic):
+    if not issubclass(y.__class__, Basic):
         return -1
 
-    n1 = x.__name__
-    n2 = y.__name__
+    n1 = x.__class__.__name__
+    n2 = y.__class__.__name__
     if n1 == n2:
         return 0
 
@@ -113,11 +113,11 @@ def _cmp_name(x: type, y: type) -> int:
     try:
         i1 = ordering_of_classes.index(n1)
     except ValueError:
-        i1 = UNKNOWN
+        i1 = getattr( x, '_class_order', UNKNOWN )
     try:
         i2 = ordering_of_classes.index(n2)
     except ValueError:
-        i2 = UNKNOWN
+        i2 = getattr( y, '_class_order', UNKNOWN )
     if i1 == UNKNOWN and i2 == UNKNOWN:
         return (n1 > n2) - (n1 < n2)
     return (i1 > i2) - (i1 < i2)
@@ -336,9 +336,10 @@ class Basic(Printable):
         # following lines:
         if self is other:
             return 0
-        n1 = self.__class__
-        n2 = other.__class__
-        c = _cmp_name(n1, n2)
+        # n1 = self.__class__
+        # n2 = other.__class__
+        # c = _cmp_name(n1, n2)
+        c = _cmp_name(self, other)
         if c:
             return c
         #

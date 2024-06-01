@@ -21,12 +21,13 @@ from sympy.physics.quantum import Dagger, Commutator
 import sympy.core.add
 import sympy.core.mul
 import sympy.core.power
+from sympy.core.basic import ordering_of_classes
 
 __all__ = [
     'QCore',
-    'Add',
-    'Mul',
-    'Pow',
+    'QAdd',
+    'QMul',
+    'QPow',
     'collect',
 ]
 
@@ -39,11 +40,11 @@ def _map_QCore( e, deep=True ):
         else:
             sargs = e.args
         if isinstance( e, sympy.core.add.Add ):
-            return Add( *sargs, evaluate=False )
+            return QAdd( *sargs, evaluate=False )
         if isinstance( e, sympy.core.mul.Mul ):
-            return Mul( *sargs, evaluate=False )
+            return QMul( *sargs, evaluate=False )
         if isinstance( e, sympy.core.power.Pow ):
-            return Pow( *sargs, evaluate=False )
+            return QPow( *sargs, evaluate=False )
     return e
 
 
@@ -52,7 +53,7 @@ def _get_unique_attrs( v, name, deep=True ):
     attrs = {}
     if hasattr( v, 'args' ):
         for arg in v.args:
-            if isinstance( arg, ( Add, Mul, Pow ) ):
+            if isinstance( arg, ( QAdd, QMul, QPow ) ):
                 arg_attrs = _get_unique_attrs( arg, name )
                 for arg_attr in arg_attrs:
                     attrs[arg_attr] = 1
@@ -76,30 +77,30 @@ class QCore( BinaryMethod ):
 
     @property
     def _add_handler(self):
-        return Add
+        return QAdd
 
     @property
     def _mul_handler(self):
-        return Mul
+        return QMul
 
     @property
     def _op_priority( self ):
         return 100
 
     def __radd__( self, other, *args, **kwargs ):
-        return Add( other, self, *args, **kwargs )
+        return QAdd( other, self, *args, **kwargs )
 
     def __add__( self, *args, **kwargs ):
-        return Add( self, *args, **kwargs )
+        return QAdd( self, *args, **kwargs )
 
     def __mul__( self, *args, **kwargs ):
-        return Mul( self, *args, **kwargs )
+        return QMul( self, *args, **kwargs )
 
     def __rmul__( self, other, *args, **kwargs ):
-        return Mul( other, self, *args, **kwargs )
+        return QMul( other, self, *args, **kwargs )
 
     def __pow__( self, *args, **kwargs ):
-        return Pow( self, *args, **kwargs )
+        return QPow( self, *args, **kwargs )
 
     @call_highest_priority( 'collect' )
     def collect( self, syms, *args, **kwargs ):
@@ -145,11 +146,11 @@ class QCore( BinaryMethod ):
                 expr = sfunc( expr, *args, **kwargs )
 
         # Avoid infinite recursion with _eval_simplify
-        if isinstance( expr, Add ):
+        if isinstance( expr, QAdd ):
             expr = sympy.core.add.Add( *expr.args )
-        elif isinstance( expr, Mul ):
+        elif isinstance( expr, QMul ):
             expr = sympy.core.mul.Mul( *expr.args )
-        elif isinstance( expr, Pow ):
+        elif isinstance( expr, QPow ):
             expr = sympy.core.power.Pow( *expr.args )
 
         expr = simplify( expr, *args, **kwargs )
@@ -159,7 +160,8 @@ class QCore( BinaryMethod ):
         return ( self.__class__, *[x.__hash__() for x in self.args] )
 
 
-class Add( QCore, sympy.core.add.Add ):
+class QAdd( QCore, sympy.core.add.Add ):
+    _class_order  = ordering_of_classes.index('Add')
 
     @property
     def _op_priority( self ):
@@ -174,8 +176,8 @@ class Add( QCore, sympy.core.add.Add ):
     #     Otherwise the inheritance of __hash__() will be blocked,
     #     just as if __hash__ had been explicitly set to None.
     def __eq__( self, other ):
-        if not isinstance( other, Add ) and isinstance( other, sympy.core.add.Add ):
-            other = Add( *other.args )
+        if not isinstance( other, QAdd ) and isinstance( other, sympy.core.add.Add ):
+            other = QAdd( *other.args )
         return super().__eq__( other )
 
     def __repr__( self ):
@@ -188,7 +190,8 @@ class Add( QCore, sympy.core.add.Add ):
         return hash( self._key() )
 
 
-class Mul( QCore, sympy.core.mul.Mul ):
+class QMul( QCore, sympy.core.mul.Mul ):
+    _class_order  = ordering_of_classes.index('Mul')
 
     @property
     def _op_priority( self ):
@@ -196,7 +199,7 @@ class Mul( QCore, sympy.core.mul.Mul ):
 
     def _eval_power( self, e, *args, **kwargs ):
         # Do not evaluate p**e since it may return core.pow object
-        p = Pow( self, e, evaluate=False )
+        p = QPow( self, e, evaluate=False )
         if e.is_Rational or e.is_Float:
             return p._eval_expand_power_base()
         return p
@@ -216,15 +219,16 @@ class Mul( QCore, sympy.core.mul.Mul ):
     #     Otherwise the inheritance of __hash__() will be blocked,
     #     just as if __hash__ had been explicitly set to None.
     def __eq__( self, other ):
-        if not isinstance( other, Mul ) and isinstance( other, sympy.core.mul.Mul ):
-            other = Mul( *other.args )
+        if not isinstance( other, QMul ) and isinstance( other, sympy.core.mul.Mul ):
+            other = QMul( *other.args )
         return super().__eq__( other )
 
     def __hash__( self ):
         return hash( self._key() )
 
 
-class Pow( QCore, sympy.core.power.Pow ):
+class QPow( QCore, sympy.core.power.Pow ):
+    _class_order  = ordering_of_classes.index('Pow')
 
     @property
     def _op_priority( self ):
@@ -235,10 +239,10 @@ class Pow( QCore, sympy.core.power.Pow ):
             ( b, e, ) = ( args[0], S.Zero, )
             if hasattr( b, 'mul_identity' ):
                 return b.mul_identity
-            elif isinstance( b, ( Pow, Mul, Add ) ):
+            elif isinstance( b, ( QPow, QMul, QAdd ) ):
                 idents = {}
                 for arg in b.args:
-                    ident = Pow( arg, S.Zero )
+                    ident = QPow( arg, S.Zero )
                     if ident is not S.One:
                         idents[type( ident )] = ident
                 if len( idents ) == 1:
@@ -275,8 +279,8 @@ class Pow( QCore, sympy.core.power.Pow ):
     #     Otherwise the inheritance of __hash__() will be blocked,
     #     just as if __hash__ had been explicitly set to None.
     def __eq__( self, other ):
-        if not isinstance( other, Pow ) and isinstance( other, sympy.core.power.Pow ):
-            other = Pow( *other.args )
+        if not isinstance( other, QPow ) and isinstance( other, sympy.core.power.Pow ):
+            other = QPow( *other.args )
         return super().__eq__( other )
 
     def __hash__( self ):
@@ -287,9 +291,9 @@ def _set_evalf_entry():
     """ Add the evalf processor functions to the global table """
     from sympy.core.evalf import evalf_table, evalf_add, evalf_mul, evalf_pow
     global evalf_table
-    evalf_table[Add] = evalf_add
-    evalf_table[Mul] = evalf_mul
-    evalf_table[Pow] = evalf_pow
+    evalf_table[QAdd] = evalf_add
+    evalf_table[QMul] = evalf_mul
+    evalf_table[QPow] = evalf_pow
 
 
 _set_evalf_entry()

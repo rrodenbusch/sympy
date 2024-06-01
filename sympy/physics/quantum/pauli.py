@@ -18,7 +18,7 @@ import sympy.core.power
 from sympy import sympify
 from sympy import Symbol
 from sympy.core import Expr, Function
-from .qcore import Add, Mul, Pow, QCore
+from .qcore import QAdd, QMul, QPow, QCore
 from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
@@ -52,11 +52,11 @@ class SigmaOpBase( QCore, Operator ):
 
     @property
     def _add_handler(self):
-        return Add
+        return QAdd
 
     @property
     def _mul_handler(self):
-        return Mul
+        return QMul
 
     @property
     def _pow_handler(self):
@@ -137,13 +137,13 @@ class SigmaOpBase( QCore, Operator ):
     def __mul__( self, other ):
         if isinstance( other, SigmaI ):
             return self
-        return Mul( self, other )
+        return QMul( self, other )
 
     def __pow__( self, other, *args, **kwargs ):
         if isinstance( self, SigmaI ) or sympify( other ) is S.Zero:
             return( SigmaI( self.name ) )
         else:
-            return Pow( self, other )
+            return QPow( self, other )
 
     def _eval_power( self, e ):
         if isinstance( self, SigmaI ):
@@ -762,14 +762,14 @@ def _qsimplify_pauli_product( a, b ):
     Internal helper function for simplifying products of Pauli operators.
     """
     if not ( isinstance( a, SigmaOpBase ) and isinstance( b, SigmaOpBase ) ):
-        return Mul( a, b )
+        return QMul( a, b )
 
     if a.name != b.name:
         # Pauli matrices with different labels commute; sort by name
         if a.name < b.name:
-            return Mul( a, b )
+            return QMul( a, b )
         else:
-            return Mul( b, a )
+            return QMul( b, a )
 
     elif isinstance( a, SigmaI ):
 
@@ -942,12 +942,12 @@ def qsimplify_pauli( e, *args, **kwargs ):
                 x = nc.pop( 0 )
                 y = _qsimplify_pauli_product( curr, x )
                 c1, nc1 = y.args_cnc()
-                curr = Mul( *nc1 )
+                curr = QMul( *nc1 )
                 c = c + c1
 
             nc_s.append( curr )
 
-        return Mul( *c ) * Mul( *nc_s )
+        return QMul( *c ) * QMul( *nc_s )
 
     return e
 
@@ -1007,7 +1007,7 @@ def qcollect_pauli( e, ops=None, *args, **kwargs ):
             if arg.args[-1] in ops:
                 idx = ops.index( arg.args[-1] )
                 if len( arg.args[:-1] ) > 1:
-                    coefs[idx].append( Mul( *arg.args[:-1] ) )
+                    coefs[idx].append( QMul( *arg.args[:-1] ) )
                 elif len( arg.args[:-1] ):
                         coefs[idx].append( arg.args[:-1][0] )
                 else:
@@ -1019,8 +1019,8 @@ def qcollect_pauli( e, ops=None, *args, **kwargs ):
 
     for idx in range( len( ops ) ):
         if len( coefs[idx] ) == 1:
-            args.append( Mul( coefs[idx][0], ops[idx] ) )
+            args.append( QMul( coefs[idx][0], ops[idx] ) )
         elif len( coefs[idx] ):
-            args.append( Mul( Add( *coefs[idx] ), ops[idx] ) )
+            args.append( QMul( QAdd( *coefs[idx] ), ops[idx] ) )
 
-    return Add( *args )
+    return QAdd( *args )
