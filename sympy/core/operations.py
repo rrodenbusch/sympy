@@ -50,7 +50,7 @@ class AssocOp(Basic):
     _args_type: type[Basic] | None = None
 
     @cacheit
-    def __new__(cls, *args, evaluate=None, _sympify=True):
+    def __new__(cls, *args, evaluate=None, _sympify=True, **kwargs):
         # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
         if _sympify:
@@ -84,7 +84,7 @@ this object, use the * or + operator instead.
         if evaluate is None:
             evaluate = global_parameters.evaluate
         if not evaluate:
-            obj = cls._from_args(args)
+            obj = cls._from_args(args, **kwargs)
             obj = cls._exec_constructor_postprocessors(obj)
             return obj
 
@@ -97,7 +97,7 @@ this object, use the * or + operator instead.
 
         c_part, nc_part, order_symbols = cls.flatten(args)
         is_commutative = not nc_part
-        obj = cls._from_args(c_part + nc_part, is_commutative)
+        obj = cls._from_args(c_part + nc_part, is_commutative, **kwargs)
         obj = cls._exec_constructor_postprocessors(obj)
 
         if order_symbols is not None:
@@ -106,7 +106,7 @@ this object, use the * or + operator instead.
         return obj
 
     @classmethod
-    def _from_args(cls, args, is_commutative=None):
+    def _from_args(cls, args, is_commutative=None, **kwargs):
         """Create new instance with already-processed args.
         If the args are not in canonical order, then a non-canonical
         result will be returned, so use with caution. The order of
@@ -116,7 +116,7 @@ this object, use the * or + operator instead.
         elif len(args) == 1:
             return args[0]
 
-        obj = super().__new__(cls, *args)
+        obj = super().__new__(cls, *args, **kwargs)
         if is_commutative is None:
             is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
@@ -169,7 +169,7 @@ this object, use the * or + operator instead.
             is_commutative = None
         else:
             is_commutative = self.is_commutative
-        return self._from_args(args, is_commutative)
+        return self._from_args(args, is_commutative, **kwargs)
 
     @classmethod
     def flatten(cls, seq):
