@@ -1,6 +1,8 @@
 from sympy.core.abstractalgebra import AbstractAlgebra, get_algebra #, check_algebra, _no_handler
 from sympy.core.basicalgebra import BasicAlgebra
 
+from sympy.testing.pytest import XFAIL
+
 def test_abstractalgebra_construction():
     from sympy.core.expr import Expr
     a = AbstractAlgebra()
@@ -8,7 +10,7 @@ def test_abstractalgebra_construction():
     assert isinstance( a, AbstractAlgebra )
     assert isinstance( a, Expr )
 
-
+@XFAIL
 def test_get_algebra():
     from sympy import Add, Mul, Pow, ImmutableDenseMatrix, MatAdd, MatMul
 

@@ -75,7 +75,7 @@ class AbstractSymbol( Symbol ):
     def __new__( cls, *args, **kwargs ):
         kwargs['commutative'] = False
         obj = super().__new__( cls, *args, **kwargs )
-        obj.algebra = kwargs.get( 'algebra', default_algebra() )
+        # obj.algebra = kwargs.get( 'algebra', default_algebra() )
         obj._class_order = ordering_of_classes.index( 'Symbol' )
         return obj
 

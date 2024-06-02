@@ -234,33 +234,45 @@ class Pow(Expr):
     # Add and Mul are AssocOps which accept kwargs _sympify and evaluate; pass them along
     def __add__(self, other, **kwargs):
         if self.algebra is not None:
-            return getattr(self.algebra,'__add__', Add)(self, other, algebra=self.algebra)
-        return Add(self, other, **kwargs)
+            _handler = getattr(self.algebra, '__add__', None)
+            if _handler is not None:
+                return _handler(self, other, algebra=self.algebra)
+        return super().__add__(other, **kwargs)
 
     def __radd__(self, other, **kwargs):
         if self.algebra is not None:
-            return getattr(self.algebra,'__add__', Add)(other, self, algebra=self.algebra)
-        return Add(other, self, **kwargs)
+            _handler = getattr(self.algebra, '__add__', None)
+            if _handler is not None:
+                return _handler(other, self, algebra=self.algebra)
+        return super().__radd__(other, **kwargs)
 
     def __sub__(self, other, **kwargs):
         if self.algebra is not None:
-            return getattr(self.algebra,'__add__', Add)(self, -other, algebra=self.algebra)
-        return Add(self, -other, **kwargs)
+            _handler = getattr(self.algebra, '__add__', None)
+            if _handler is not None:
+                return _handler(self, -other, algebra=self.algebra)
+        return super().__sub__(other, **kwargs)
 
     def __rsub__(self, other, **kwargs):
         if self.algebra is not None:
-            return getattr(self.algebra,'__add__', Add)(other, -self, algebra=self.algebra)
-        return Add(other, -self, **kwargs)
+            _handler = getattr(self.algebra, '__add__', None)
+            if _handler is not None:
+                return _handler(other, -self, algebra=self.algebra)
+        return super().__rsub__(other, **kwargs)
 
     def __mul__(self, other, **kwargs):
         if self.algebra is not None:
-            return getattr(self.algebra,'__mul__', Mul)(self, other, algebra=self.algebra)
-        return Mul(self, other, **kwargs)
+            _handler = getattr(self.algebra, '__mul__', None)
+            if _handler is not None:
+                return _handler(self, other, algebra=self.algebra)
+        return super().__mul__(other, **kwargs)
 
     def __rmul__(self, other, **kwargs):
         if self.algebra is not None:
-            return getattr(self.algebra,'__mul__', Mul)(self, other, algebra=self.algebra)
-        return Mul(other, self, **kwargs)
+            _handler = getattr(self.algebra, '__mul__', None)
+            if _handler is not None:
+                return _handler(other, self, algebra=self.algebra)
+        return super().__rmul__(other, **kwargs)
 
     def __pow__(self, other, mod=None):
         if self.algebra is not None:

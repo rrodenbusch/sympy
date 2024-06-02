@@ -179,10 +179,6 @@ class Expr(Basic, EvalfMixin):
     def _mul_handler(self):
         return Mul
 
-    @property
-    def _pow_handler(self):
-        return Pow
-
     def __pos__(self):
         return self
 

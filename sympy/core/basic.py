@@ -232,7 +232,7 @@ class Basic(Printable):
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
         obj.algebra = algebra
-        
+
         obj._args = args  # all items in args must be Basic objects
         return obj
 
