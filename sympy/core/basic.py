@@ -169,7 +169,8 @@ class Basic(Printable):
     """
     __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
-                 '_assumptions'
+                 '_assumptions',
+                 'algebra'
                 )
 
     _args: tuple[Basic, ...]
@@ -226,11 +227,12 @@ class Basic(Printable):
 
     kind: Kind = UndefinedKind
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, algebra=None):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
-
+        obj.algebra = algebra
+        
         obj._args = args  # all items in args must be Basic objects
         return obj
 
@@ -866,6 +868,7 @@ class Basic(Printable):
 
         """
         return self.__class__
+
 
     @property
     def args(self) -> tuple[Basic, ...]:

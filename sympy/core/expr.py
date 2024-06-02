@@ -200,37 +200,37 @@ class Expr(Basic, EvalfMixin):
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return Add(self, other)
+        return Add(self, other, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return Add(other, self)
+        return Add(other, self, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return Add(self, -other)
+        return Add(self, -other, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return Add(other, -self)
+        return Add(other, -self, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return Mul(self, other)
+        return Mul(self, other, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return Mul(other, self)
+        return Mul(other, self, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rpow__')
     def _pow(self, other):
-        return Pow(self, other)
+        return Pow(self, other, algebra=self.algebra)
 
     def __pow__(self, other, mod=None) -> Expr:
         if mod is None:
@@ -251,7 +251,7 @@ class Expr(Basic, EvalfMixin):
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        return Pow(other, self)
+        return Pow(other, self, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rtruediv__')
@@ -265,11 +265,11 @@ class Expr(Basic, EvalfMixin):
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__truediv__')
     def __rtruediv__(self, other):
-        denom = Pow(self, S.NegativeOne)
+        denom = Pow(self, S.NegativeOne, algebra=self.algebra)
         if other is S.One:
             return denom
         else:
-            return Mul(other, denom)
+            return Mul(other, denom, algebra=self.algebra)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmod__')
