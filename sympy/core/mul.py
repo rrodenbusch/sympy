@@ -88,7 +88,8 @@ def _unevaluated_Mul(*args):
     return Mul._from_args(newargs)
 
 
-class Mul(Expr, AssocOp):
+from .metaalgebra import MetaOp
+class Mul(Expr, AssocOp, metaclass=MetaOp):
     """
     Expression representing multiplication operation for algebraic field.
 
@@ -158,7 +159,7 @@ class Mul(Expr, AssocOp):
     MatMul
 
     """
-    __slots__ = ()
+    __slots__ = ('algebra')
 
     args: tTuple[Expr, ...]
 

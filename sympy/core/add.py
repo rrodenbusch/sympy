@@ -82,8 +82,8 @@ def _unevaluated_Add(*args):
         newargs.insert(0, co)
     return Add._from_args(newargs)
 
-
-class Add(Expr, AssocOp):
+from .metaalgebra import MetaOp
+class Add(Expr, AssocOp, metaclass=MetaOp):
     """
     Expression representing addition operation for algebraic group.
 
@@ -170,7 +170,7 @@ class Add(Expr, AssocOp):
 
     """
 
-    __slots__ = ()
+    __slots__ = ('algebra')
 
     args: tTuple[Expr, ...]
 

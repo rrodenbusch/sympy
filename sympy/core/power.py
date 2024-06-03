@@ -19,7 +19,8 @@ from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
 
-class Pow(Expr):
+from .metaalgebra import MetaOp
+class Pow(Expr, metaclass=MetaOp):
     """
     Defines the expression x**y as "x raised to a power y"
 
@@ -110,7 +111,7 @@ class Pow(Expr):
     """
     is_Pow = True
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ('is_commutative','algebra')
 
     args: tuple[Expr, Expr]
     _args: tuple[Expr, Expr]
