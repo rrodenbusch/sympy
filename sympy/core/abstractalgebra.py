@@ -91,8 +91,11 @@ class BasicAlgebra():
 class AbstractExpr( type ):
     """ Metaclass to create and save the algebra for operators usage """
 
-    # def __call__(self):
-    #    # Create and then inspect the instance to setup the algebra configuration
-    #     pass
+    def __call__(cls, *args, **kwargs):
+        # Create and then inspect the instance to setup the algebra configuration
+        instance = super().__call__(*args, **kwargs)
+        if 'algebra' in kwargs:
+            instance.algebra = kwargs['algebra']
+            return instance
 
-    pass
+        return instance
