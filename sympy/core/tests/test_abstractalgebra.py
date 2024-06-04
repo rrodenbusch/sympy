@@ -1,16 +1,65 @@
-from sympy.core.abstractalgebra import BasicAlgebra, AlgebraicOp
+from sympy.core.abstractalgebra import AbstractAlgebra, AbstractAlgebraOp, AbstractAlgebraMeta
 from sympy.core.expr import Expr
 # from sympy.testing.pytest import XFAIL
 
 
-def test_basic_algebra_class():
-    b = BasicAlgebra()
+def test_abstractalgebra_class():
+    b = AbstractAlgebra()
     assert b._op_priority == 10
 
-    b = BasicAlgebra(_op_priority = 100)
+    b = AbstractAlgebra(_op_priority=100)
     assert b._op_priority == 100
 
 
-def test_create_algebraicop():
-    b = AlgebraicOp()
-    assert isinstance( b, Expr)
+def test_create_abstractalgebraop():
+    b = AbstractAlgebraOp()
+    assert isinstance(b, Expr)
+
+
+def _new_pow(self, *args, **kwargs):
+    pass
+
+
+class AExpr(Expr, metaclass=AbstractAlgebraMeta):
+    _op_priority = 110
+    algebra = AbstractAlgebra(_op_priority=120, _pow=_new_pow)
+
+
+class BExpr(Expr, metaclass=AbstractAlgebraMeta):
+    _op_priority = 50
+
+    def _pow(self, *args, **kwargs):
+        return super()._pow(*args, **kwargs)
+
+
+class CExpr(Expr, metaclass=AbstractAlgebraMeta):
+    _op_priority = 130
+    algebra = AbstractAlgebra(_op_priority=140, _pow=_new_pow)
+
+    def __init__(self, *args, **kwargs):
+        if 'algebra' in kwargs:
+            self.algebra = kwargs['algebra']
+
+
+def test_create_abstractexpr():
+    a = AExpr()
+    assert isinstance(a, Expr)
+    assert a._op_priority == 120
+    assert hasattr(a, 'algebra')
+    assert a.algebra._pow == _new_pow
+
+    b = BExpr()
+    assert isinstance(b, Expr)
+    assert b._op_priority == 50
+    assert b.algebra._pow == BExpr._pow
+
+
+    c = CExpr()
+    assert c._op_priority == 140
+    assert c.algebra._pow == _new_pow
+
+    d = CExpr(algebra=AbstractAlgebra(_op_priority=150))
+
+    assert d._op_priority == 140
+    assert d.algebra._op_priority == 150
+    assert not hasattr(d.algebra, '_pow')

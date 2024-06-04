@@ -338,9 +338,6 @@ class Basic(Printable):
         # following lines:
         if self is other:
             return 0
-        # n1 = self.__class__
-        # n2 = other.__class__
-        # c = _cmp_name(n1, n2)
         c = _cmp_name(self, other)
         if c:
             return c
@@ -868,7 +865,6 @@ class Basic(Printable):
 
         """
         return self.__class__
-
 
     @property
     def args(self) -> tuple[Basic, ...]:
