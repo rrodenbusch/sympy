@@ -83,13 +83,11 @@ class AbstractAlgebraOp(Expr):
     Implement methods of abstract algebra in core classes Add, Mul and Pow
     """
 
-    _op_priority = Expr._op_priority - 1
-
-    # @property
-    # def _op_priority(self):
-    #     if  type(self.algebra) is AbstractAlgebra:  # Which is faster, type or comparison to None
-    #         return self.algebra._op_priority
-    #     return super()._op_priority
+    @property
+    def _op_priority(self):
+        if  type(self.algebra) is AbstractAlgebra:  # Which is faster, type or comparison to None
+            return self.algebra._op_priority
+        return super()._op_priority
 
     # Add and Mul are AssocOps which accept kwargs _sympify and evaluate
     def __add__(self, other, **kwargs):
