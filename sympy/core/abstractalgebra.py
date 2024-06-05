@@ -39,6 +39,13 @@
     abstract_algebra_attributes.
 
 
+    Supported Methods
+    =================
+
+    __add__, __radd__, __mul__, and __rmul__ handle the algebraic operations.
+    __pow__ and _pow handle inverses and repeated multiplication, A*A=A**2
+    collect supports methods to handle non-commutative elements in the algebra
+
     See Also
     ========
 
@@ -49,7 +56,9 @@ from .expr import Expr
 abstract_algebra_attributes = ('_op_priority',
                                '__add__', '__radd__',
                                '__pow__', '_pow',
-                               '__mul__', '__rmul__',)
+                               '__mul__', '__rmul__',
+                               'collect', 'simplify',
+                               )
 
 
 class AbstractAlgebra():
@@ -69,13 +78,17 @@ class AbstractAlgebra():
     decorator and associated _op_priority attribute.
 
     """
-    __slots__ = tuple(abstract_algebra_attributes)
+    __slots__ = ('cls_name',) + abstract_algebra_attributes
 
     def __init__(self, _op_priority=Expr._op_priority, **kwargs):
         self._op_priority = _op_priority
         for method in abstract_algebra_attributes:
             if method in kwargs:
                 setattr(self, method, kwargs[method])
+        self.cls_name = kwargs.get('class_name', 'Unknown')
+
+    def __repr__(self):
+        return f"{self.cls_name}.AbstractAlgebra"
 
 
 class AbstractAlgebraOp(Expr):
@@ -85,11 +98,10 @@ class AbstractAlgebraOp(Expr):
 
     @property
     def _op_priority(self):
-        if  type(self.algebra) is AbstractAlgebra:  # Which is faster, type or comparison to None
+        if  type(self.algebra) is AbstractAlgebra:
             return self.algebra._op_priority
         return super()._op_priority
 
-    # Add and Mul are AssocOps which accept kwargs _sympify and evaluate
     def __add__(self, other, **kwargs):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
@@ -140,11 +152,56 @@ class AbstractAlgebraOp(Expr):
         return super().__pow__(other, mod=mod)
 
     def _pow(self, other, **kwargs):
+        # Return NotImplemented to return control to Pow.
         if self.algebra is not None:
             _handler = getattr(self.algebra, '_pow', None)
             if _handler is not None:
                 return _handler(self, other, algebra=self.algebra)
         return super()._pow(other, **kwargs)
+
+    def collect(self, syms, *args, **kwargs):
+        if self.algebra is not None:
+            _handler = getattr(self.algebra, 'collect', None)
+            if _handler is not None:
+                return _handler(self, syms, *args, **kwargs)
+            kwargs['algebra'] = self.algebra
+            expr = super().collect(syms, *args, **kwargs)
+            expr.algebra = self.algebra
+            return expr
+
+        return super().collect(syms, *args, **kwargs)
+
+    def simplify(self, *args, **kwargs):
+        if self.algebra is not None:
+            _handler = getattr(self.algebra, 'simplify', None)
+            if _handler is not None:
+                return _handler(self, *args, **kwargs)
+            kwargs['algebra'] = self.algebra
+            expr = super().simplify(*args, **kwargs)
+            expr.algebra = self.algebra
+            return expr
+
+        return super().simplify(*args, **kwargs)
+
+    def expand(self, *args, **kwargs):
+        if self.algebra is not None:
+            # Preserve the algebra in the result
+            kwargs['algebra'] = self.algebra
+            expr = super().expand(*args, **kwargs)
+            expr.algebra = self.algebra
+            return expr
+
+        return super().expand(*args, **kwargs)
+
+    def subs(self, *args, **kwargs):
+        if self.algebra is not None:
+            # Preserve the algebra in the result
+            kwargs['algebra'] = self.algebra
+            expr = super().subs(*args, **kwargs)
+            expr.algebra = self.algebra
+            return expr
+
+        return super().subs(*args, **kwargs)
 
 
 class AbstractAlgebraMeta(type):
@@ -183,11 +240,10 @@ class AbstractAlgebraMeta(type):
 
         # If class priority is greater than the default, build the algebra
         if '_op_priority' in dct and dct['_op_priority'] > Expr._op_priority:
-            dct['algebra'] = AbstractAlgebra(**dct)
+            dct['algebra'] = AbstractAlgebra(**dct, class_name=name)
             return super().__new__(cls, name, bases, dct)
 
         return super().__new__(cls, name, bases, dct)
-
 
     def __call__(cls, *args, **kwargs):
         # algebra is a slot that must be initialized for all Basic instances
@@ -197,11 +253,11 @@ class AbstractAlgebraMeta(type):
         # a metaclass on Add, Mul and Pow would remove this requirement but
         #   would add overhead to the default algebra
         instance = super().__call__(*args, **kwargs)
-        algebra = getattr( instance, 'algebra', None )
+        algebra = getattr(instance, 'algebra', None)
         if type(algebra) is AbstractAlgebra:
             return instance
 
-        algebra = getattr( cls, 'algebra', None )
+        algebra = getattr(cls, 'algebra', None)
         if type(algebra) is AbstractAlgebra:
             instance._op_priority = algebra._op_priority
             instance.algebra = algebra

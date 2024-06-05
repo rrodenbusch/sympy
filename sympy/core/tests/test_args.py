@@ -3828,6 +3828,11 @@ def test_sympy__physics__quantum__pauli__SigmaOpBase():
     assert _test_args(SigmaOpBase())
 
 
+def test_sympy__physics__quantum__pauli__SigmaI():
+    from sympy.physics.quantum.pauli import SigmaI
+    assert _test_args(SigmaI())
+
+
 def test_sympy__physics__quantum__pauli__SigmaX():
     from sympy.physics.quantum.pauli import SigmaX
     assert _test_args(SigmaX())

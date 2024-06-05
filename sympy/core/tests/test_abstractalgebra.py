@@ -1,6 +1,5 @@
 from sympy.core.abstractalgebra import AbstractAlgebra, AbstractAlgebraOp, AbstractAlgebraMeta
 from sympy.core.expr import Expr
-# from sympy.testing.pytest import XFAIL
 
 
 def test_abstractalgebra_class():
@@ -14,7 +13,6 @@ def test_abstractalgebra_class():
 def test_create_abstractalgebraop():
     b = AbstractAlgebraOp()
     assert isinstance(b, Expr)
-
 
 def _new_pow(self, *args, **kwargs):
     pass
@@ -34,11 +32,20 @@ class BExpr(Expr, metaclass=AbstractAlgebraMeta):
 
 class CExpr(Expr, metaclass=AbstractAlgebraMeta):
     _op_priority = 130
-    algebra = AbstractAlgebra(_op_priority=140, _pow=_new_pow)
+    algebra = AbstractAlgebra(_op_priority=140, _pow=_new_pow, class_name='cexpr')
 
     def __init__(self, *args, **kwargs):
         if 'algebra' in kwargs:
             self.algebra = kwargs['algebra']
+
+
+def test_abstractalgebra_repr():
+    assert repr(AbstractAlgebra(class_name='test_repr')) == 'test_repr.AbstractAlgebra'
+    assert repr(AbstractAlgebra()) == 'Unknown.AbstractAlgebra'
+    assert repr(AExpr().algebra) == 'Unknown.AbstractAlgebra'
+    assert repr(BExpr().algebra) == 'BExpr.AbstractAlgebra'
+    assert repr(CExpr().algebra) == 'cexpr.AbstractAlgebra'
+
 
 
 def test_create_abstractexpr():
@@ -52,7 +59,6 @@ def test_create_abstractexpr():
     assert isinstance(b, Expr)
     assert b._op_priority == 50
     assert b.algebra._pow == BExpr._pow
-
 
     c = CExpr()
     assert c._op_priority == 140
