@@ -129,9 +129,9 @@ def test_pauli_operators_multiplication():
     assert qsimplify_pauli(sy * sz) == I * sx
     assert qsimplify_pauli(sz * sx) == I * sy
 
-    assert qsimplify_pauli(sy * sx) == -I * sz
-    assert qsimplify_pauli(sz * sy) == -I * sx
-    assert qsimplify_pauli(sx * sz) == -I * sy
+    assert qsimplify_pauli(sy * sx) == - I * sz
+    assert qsimplify_pauli(sz * sy) == - I * sx
+    assert qsimplify_pauli(sx * sz) == - I * sy
 
 
 def test_pauli_operators_multiplication_with_labels():
@@ -144,11 +144,15 @@ def test_pauli_operators_multiplication_with_labels():
     assert qsimplify_pauli(sy1 * sy1) == si1
     assert qsimplify_pauli(sz1 * sz1) == si1
 
-    assert qsimplify_pauli(sx1 * sy1 * sx2 * sy2) == -sz1 * sz2
-    assert qsimplify_pauli(sy1 * sz1 * sz2 * sx2) == -sx1 * sy2
+    assert isinstance(sx1 * sx2, Mul)
+    assert isinstance(sy1 * sy2, Mul)
+    assert isinstance(sz1 * sz2, Mul)
+
+    assert qsimplify_pauli(sx1 * sy1 * sx2 * sy2) == - sz1 * sz2
+    assert qsimplify_pauli(sy1 * sz1 * sz2 * sx2) == - sx1 * sy2
 
 
-def test_pauli_power_qcore():
+def test_pauli_pow():
     (a, b) = symbols('a b')
     mul_expr_xy = sx1 * sx2
     mul_expr_xz = sy1 * sz2
@@ -301,7 +305,7 @@ def test_pauli_states():
     assert qapply(sx * up) == down
     assert qapply(sx * down) == up
     assert qapply(sz * up) == up
-    assert qapply(sz * down) == -down
+    assert qapply(sz * down) == - down
     assert qapply(si * down) == down
     assert qapply(si * up) == up
 
@@ -311,7 +315,7 @@ def test_pauli_states():
     assert qapply(up * sx, dagger=True) == down
     assert qapply(down * sx, dagger=True) == up
     assert qapply(up * sz, dagger=True) == up
-    assert qapply(down * sz, dagger=True) == -down
+    assert qapply(down * sz, dagger=True) == - down
     assert qapply(down * si, dagger=True) == down
     assert qapply(up * si, dagger=True) == up
 
@@ -334,7 +338,8 @@ def test_evalf():
     (a, b,) = symbols('a b')
 
     assert (a * exp(SigmaX())).evalf() == a * exp(SigmaX())
-    assert (a * exp(SigmaX(1, suppress_evalf=True))).evalf() == a * exp(SigmaX(1))
+    # assert (a * exp(SigmaX(1, suppress_evalf=True))).evalf() == a * exp(SigmaX(1))
+    assert (a * exp(SigmaX(1))).evalf() == a * exp(SigmaX(1))
 
     assert si.evalf() == Matrix([[1, 0], [0, 1]])
     assert sx.evalf() == Matrix([[0, 1], [1, 0]])
@@ -367,8 +372,8 @@ def test_hash():
     assert hash(sy) != hash(sz)
     assert hash(sz) != hash(si)
 
-    assert hash(sx) == hash(SigmaX(suppress_evalf=False))
-    assert hash(sx) != hash(SigmaX(suppress_evalf=True))
+    # assert hash(sx) == hash(SigmaX(suppress_evalf=False))
+    # assert hash(sx) == hash(SigmaX(suppress_evalf=True))
 
 
 def test_use_name():

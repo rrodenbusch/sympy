@@ -30,30 +30,14 @@ class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
     def name(self):
         return self.args[0]
 
-    def dagger(self):  # New
+    def dagger(self):
         return self._eval_adjoint()
 
-    def adjoint(self):  # New
+    def adjoint(self):
         return self.dagger()
 
-    def commute(self, other):  # New
+    def commute(self, other):
         return Commutator(self, other)
-
-    @property
-    def suppress_evalf(self):  # New
-        return self._suppress_evalf
-
-    def _pauli_evalf(self, *args, **kwargs):  # Diff
-        if self.suppress_evalf:
-            return self
-
-        return ImmutableMatrix (
-            self._represent_default_basis(format=kwargs.get('format', 'sympy'))
-            )
-
-    @property
-    def _eval_evalf(self, *args, **kwargs):  # New
-        return self._pauli_evalf
 
     @property
     def use_name(self):
@@ -64,16 +48,9 @@ class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
         return (False,)
 
     def __new__(cls, *args, **hints):
-        _suppress_evalf = hints.pop('suppress_evalf', False)
         e = Operator.__new__(cls, *args, **hints)
-        e._suppress_evalf = _suppress_evalf
+        e.algebra = cls.algebra
         return e
-
-    def _key(self):  # New
-        return (self.__class__, self._suppress_evalf, *[x.__hash__() for x in self.args])
-
-    def __hash__(self):  # New
-        return hash(self._key())
 
     def _eval_commutator_BosonOp(self, other, **hints):
         return S.Zero
@@ -87,27 +64,37 @@ class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
             else:
                 return SigmaI(self.name)
 
+    def _pauli_evalf(self, *args, **kwargs):
+        return ImmutableMatrix (
+            self._represent_default_basis(format=kwargs.get('format', 'sympy'))
+            )
+
+    #=============  Support collect, evalf, simplify ============
+    @property
+    def _eval_evalf(self, *args, **kwargs):
+        return self._pauli_evalf
+
     @staticmethod
-    def _eval_collect(e, syms, *args, **kwargs):  # New
+    def _eval_collect(e, syms, *args, **kwargs):
         return qcollect_pauli(e, syms, *args, **kwargs)
 
-    def evalf(self, *args, **kwargs):  # New
+    def evalf(self, *args, **kwargs):
         return self._pauli_evalf(self, *args, **kwargs)
 
-    def _sympyrepr(self, printer, *args):  # New
+    def _sympyrepr(self, printer, *args):
         if self.use_name:
             return "%s(%s)" % (
                 self.__class__.__name__, printer._print(self.args[0])
             )
         return "%s()" % (self.__class__.__name__)
 
-    def _sympystr(self, printer, *args):  # New
+    def _sympystr(self, printer, *args):
         return self._sympyrepr(printer, *args)
 
     #=============  Abstract Algebra Definitions ============
     _op_priority = 200
 
-    def __mul__(self, other, **kwargs):  # New
+    def __mul__(self, other, **kwargs):
         if isinstance(other, SigmaI):
             return self
         kwargs['algebra'] = SigmaOpBase.algebra
@@ -124,7 +111,7 @@ class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
             return SigmaI()
         return NotImplemented
 
-    def __pow__(self, other, *args, **kwargs):  # New
+    def __pow__(self, other, *args, **kwargs):
         if isinstance(self, SigmaI) or sympify(other) is S.Zero:
             if isinstance(self, SigmaOpBase):
                 return(SigmaI(self.name))
@@ -137,7 +124,7 @@ class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
             kwargs['algebra'] = SigmaOpBase.algebra
             return Pow(self, other, **kwargs)
 
-    def collect(self, syms, *args, **kwargs):  # New
+    def collect(self, syms, *args, **kwargs):
         from sympy.physics.quantum.collect import collect as qcollect
 
         return qcollect(self, syms, *args, **kwargs)
@@ -146,7 +133,7 @@ class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
         from sympy import simplify
 
         kwargs['algebra'] = self.algebra
-        expr = qsimplify_pauli(self, *args, **kwargs)
+        expr = qsimplify_pauli(self)
         expr = simplify(expr)
         expr.algebra = self.algebra
         return expr
@@ -261,7 +248,7 @@ class SigmaX(SigmaOpBase):
         if self.name != other.name:
             return S.Zero
         else:
-            return -2 * I * SigmaY(self.name)
+            return - 2 * I * SigmaY(self.name)
 
     def _eval_commutator_BosonOp(self, other, **hints):
         return S.Zero
@@ -336,7 +323,7 @@ class SigmaY(SigmaOpBase):
         if self.name != other.name:
             return S.Zero
         else:
-            return -2 * I * SigmaZ(self.name)
+            return - 2 * I * SigmaZ(self.name)
 
     def _eval_commutator_SigmaI(self, other, **hints):
         return S.Zero
@@ -408,7 +395,7 @@ class SigmaZ(SigmaOpBase):
         if self.name != other.name:
             return S.Zero
         else:
-            return -2 * I * SigmaX(self.name)
+            return - 2 * I * SigmaX(self.name)
 
     def _eval_commutator_SigmaI(self, other, **hints):
         return S.Zero
@@ -767,7 +754,7 @@ def _qsimplify_pauli_product(a, b):
             return I * SigmaZ(a.name)
 
         if isinstance(b, SigmaZ):
-            return -I * SigmaY(a.name)
+            return - I * SigmaY(a.name)
 
         if isinstance(b, SigmaMinus):
             return (SigmaI(a.name) + SigmaZ(a.name)) / 2
@@ -781,7 +768,7 @@ def _qsimplify_pauli_product(a, b):
             return SigmaY(a.name)
 
         if isinstance(b, SigmaX):
-            return -I * SigmaZ(a.name)
+            return - I * SigmaZ(a.name)
 
         if isinstance(b, SigmaY):
             return SigmaI(a.name)
@@ -804,13 +791,13 @@ def _qsimplify_pauli_product(a, b):
             return I * SigmaY(a.name)
 
         if isinstance(b, SigmaY):
-            return -I * SigmaX(a.name)
+            return - I * SigmaX(a.name)
 
         if isinstance(b, SigmaZ):
             return SigmaI(a.name)
 
         if isinstance(b, SigmaMinus):
-            return -SigmaMinus(a.name)
+            return - SigmaMinus(a.name)
 
         if isinstance(b, SigmaPlus):
             return SigmaPlus(a.name)
@@ -824,7 +811,7 @@ def _qsimplify_pauli_product(a, b):
             return (SigmaI(a.name) - SigmaZ(a.name)) / 2
 
         if isinstance(b, SigmaY):
-            return -I * (SigmaI(a.name) - SigmaZ(a.name)) / 2
+            return - I * (SigmaI(a.name) - SigmaZ(a.name)) / 2
 
         if isinstance(b, SigmaZ):
             # (SigmaX(a.name) - I * SigmaY(a.name))/2
@@ -848,7 +835,7 @@ def _qsimplify_pauli_product(a, b):
             return I * (SigmaI(a.name) + SigmaZ(a.name)) / 2
 
         if isinstance(b, SigmaZ):
-            # -(SigmaX(a.name) + I * SigmaY(a.name))/2
+            #-(SigmaX(a.name) + I * SigmaY(a.name))/2
             return -SigmaPlus(a.name)
 
         if isinstance(b, SigmaMinus):
@@ -861,7 +848,7 @@ def _qsimplify_pauli_product(a, b):
         return a * b
 
 
-def qsimplify_pauli(e, *args, **kwargs):
+def qsimplify_pauli(e):
     """
     Simplify an expression that includes products of pauli operators.
 

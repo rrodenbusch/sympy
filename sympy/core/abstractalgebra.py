@@ -46,6 +46,7 @@
     __pow__ and _pow handle inverses and repeated multiplication, A*A=A**2
     collect supports methods to handle non-commutative elements in the algebra
 
+
     See Also
     ========
 
@@ -57,6 +58,7 @@ abstract_algebra_attributes = ('_op_priority',
                                '__add__', '__radd__',
                                '__pow__', '_pow',
                                '__mul__', '__rmul__',
+                               '__truediv__', '__rtruediv__',
                                'collect', 'simplify',
                                )
 
@@ -80,12 +82,12 @@ class AbstractAlgebra():
     """
     __slots__ = ('cls_name',) + abstract_algebra_attributes
 
-    def __init__(self, _op_priority=Expr._op_priority, **kwargs):
+    def __init__(self, _op_priority = Expr._op_priority, **kwargs):
         self._op_priority = _op_priority
         for method in abstract_algebra_attributes:
             if method in kwargs:
                 setattr(self, method, kwargs[method])
-        self.cls_name = kwargs.get('class_name', 'Unknown')
+        self.cls_name = kwargs.get('cls_name', 'Unknown')
 
     def __repr__(self):
         return f"{self.cls_name}.AbstractAlgebra"
@@ -106,57 +108,71 @@ class AbstractAlgebraOp(Expr):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
-                return _handler(self, other, algebra=self.algebra)
+                return _handler(self, other, algebra = self.algebra)
         return super().__add__(other, **kwargs)
 
     def __radd__(self, other, **kwargs):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
-                return _handler(other, self, algebra=self.algebra)
+                return _handler(other, self, algebra = self.algebra)
         return super().__radd__(other, **kwargs)
 
     def __sub__(self, other, **kwargs):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
-                return _handler(self, -other, algebra=self.algebra)
+                return _handler(self, -other, algebra = self.algebra)
         return super().__sub__(other, **kwargs)
 
     def __rsub__(self, other, **kwargs):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
-                return _handler(other, -self, algebra=self.algebra)
+                return _handler(other, -self, algebra = self.algebra)
         return super().__rsub__(other, **kwargs)
 
     def __mul__(self, other, **kwargs):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__mul__', None)
             if _handler is not None:
-                return _handler(self, other, algebra=self.algebra)
+                return _handler(self, other, algebra = self.algebra)
         return super().__mul__(other, **kwargs)
 
     def __rmul__(self, other, **kwargs):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__mul__', None)
             if _handler is not None:
-                return _handler(other, self, algebra=self.algebra)
+                return _handler(other, self, algebra = self.algebra)
         return super().__rmul__(other, **kwargs)
 
-    def __pow__(self, other, mod=None):
+    def __truediv__(self, other, **kwargs):
+        if self.algebra is not None:
+            _handler = getattr(self.algebra, '__truediv__', None)
+            if _handler is not None:
+                return _handler(self, other, algebra = self.algebra)
+        return super().__truediv__(other, **kwargs)
+
+    def __rtruediv__(self, other, **kwargs):
+        if self.algebra is not None:
+            _handler = getattr(self.algebra, '__rtruediv__', None)
+            if _handler is not None:
+                return _handler(self, other, algebra = self.algebra)
+        return super().__rtruediv__(other, **kwargs)
+
+    def __pow__(self, other, mod = None):
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__pow__', None)
             if _handler is not None:
-                return _handler(self, other, algebra=self.algebra)
-        return super().__pow__(other, mod=mod)
+                return _handler(self, other, algebra = self.algebra)
+        return super().__pow__(other, mod = mod)
 
     def _pow(self, other, **kwargs):
         # Return NotImplemented to return control to Pow.
         if self.algebra is not None:
             _handler = getattr(self.algebra, '_pow', None)
             if _handler is not None:
-                return _handler(self, other, algebra=self.algebra)
+                return _handler(self, other, algebra = self.algebra)
         return super()._pow(other, **kwargs)
 
     def collect(self, syms, *args, **kwargs):
@@ -240,27 +256,7 @@ class AbstractAlgebraMeta(type):
 
         # If class priority is greater than the default, build the algebra
         if '_op_priority' in dct and dct['_op_priority'] > Expr._op_priority:
-            dct['algebra'] = AbstractAlgebra(**dct, class_name=name)
+            dct['algebra'] = AbstractAlgebra(**dct, cls_name = name)
             return super().__new__(cls, name, bases, dct)
 
         return super().__new__(cls, name, bases, dct)
-
-    def __call__(cls, *args, **kwargs):
-        # algebra is a slot that must be initialized for all Basic instances
-        #   this will override the class defined algebra
-        #   setting the default to be None allows for faster execution of
-        #   the default algebra
-        # a metaclass on Add, Mul and Pow would remove this requirement but
-        #   would add overhead to the default algebra
-        instance = super().__call__(*args, **kwargs)
-        algebra = getattr(instance, 'algebra', None)
-        if type(algebra) is AbstractAlgebra:
-            return instance
-
-        algebra = getattr(cls, 'algebra', None)
-        if type(algebra) is AbstractAlgebra:
-            instance._op_priority = algebra._op_priority
-            instance.algebra = algebra
-            return instance
-
-        return instance
