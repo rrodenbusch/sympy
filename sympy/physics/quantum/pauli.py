@@ -48,8 +48,9 @@ class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
         return (False,)
 
     def __new__(cls, *args, **hints):
+        algebra = hints.pop('algebra', cls.algebra)
         e = Operator.__new__(cls, *args, **hints)
-        e.algebra = cls.algebra
+        e.algebra = algebra
         return e
 
     def _eval_commutator_BosonOp(self, other, **hints):
