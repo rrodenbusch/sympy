@@ -100,14 +100,9 @@ class AbstractAlgebraOp(Expr):
 
     @property
     def _op_priority(self):
-        _priority = getattr(self,'__op_priority', None)
-        if _priority is None:
-            if  type(self.algebra) is AbstractAlgebra:
-                self.__op_priority = self.algebra._op_priority
-            else:
-                self.__op_priority = super()._op_priority
-            _priority = self.__op_priority
-        return _priority
+        if  type(self.algebra) is AbstractAlgebra:
+            return self.algebra._op_priority
+        return super()._op_priority
 
     def __add__(self, other, **kwargs):
         if self.algebra is not None:
