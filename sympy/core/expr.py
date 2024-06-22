@@ -3705,6 +3705,7 @@ class Expr(Basic, EvalfMixin):
 
             expr = Add(*terms)
 
+        expr.algebra = self.algebra  # Retain the algebra of the expression
         return expr
 
     ###########################################################################

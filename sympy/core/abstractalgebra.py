@@ -199,15 +199,16 @@ class AbstractAlgebraOp(Expr):
 
         return super().simplify(*args, **kwargs)
 
-    def expand(self, *args, **kwargs):
-        if self.algebra is not None:
-            # Preserve the algebra in the result
-            kwargs['algebra'] = self.algebra
-            expr = super().expand(*args, **kwargs)
-            expr.algebra = self.algebra
-            return expr
-
-        return super().expand(*args, **kwargs)
+    # update expr.expand() to retain the algebra
+    # def expand(self, *args, **kwargs):
+    #     if self.algebra is not None:
+    #         # Preserve the algebra in the result
+    #         kwargs['algebra'] = self.algebra
+    #         expr = super().expand(*args, **kwargs)
+    #         expr.algebra = self.algebra
+    #         return expr
+    #
+    #     return super().expand(*args, **kwargs)
 
     def subs(self, *args, **kwargs):
         if self.algebra is not None:
