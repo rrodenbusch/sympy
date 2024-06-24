@@ -54,6 +54,7 @@
 
 """
 from .expr import Expr
+from .basic import Basic
 abstract_algebra_attributes = ('_op_priority',
                                '__add__', '__radd__',
                                '__pow__', '_pow',
@@ -61,6 +62,19 @@ abstract_algebra_attributes = ('_op_priority',
                                '__truediv__', '__rtruediv__',
                                'collect', 'simplify',
                                )
+
+default_algebra = {'_op_priority' : Expr._op_priority,
+                   '__add__' : Expr.__add__,
+                   '__radd__' : Expr.__radd__,
+                   '__pow__' : Expr.__pow__,
+                   '_pow' : Expr._pow,
+                   '__mul__' : Expr.__mul__,
+                   '__rmul__' : Expr.__rmul__,
+                   '__truediv__' : Expr.__truediv__,
+                   '__rtruediv__' : Expr.__rtruediv__,
+                   'collect' : None,   # call super() explicitly and retain algebra on result
+                   'simplify' : Basic.simplify,
+                   }
 
 
 class AbstractAlgebra():
@@ -82,11 +96,12 @@ class AbstractAlgebra():
     """
     __slots__ = ('cls_name',) + abstract_algebra_attributes
 
-    def __init__(self, _op_priority = Expr._op_priority, **kwargs):
-        self._op_priority = _op_priority
+    def __init__(self, **kwargs):
         for method in abstract_algebra_attributes:
             if method in kwargs:
                 setattr(self, method, kwargs[method])
+            else:
+                setattr(self, method, default_algebra[method] )
         self.cls_name = kwargs.get('cls_name', 'Unknown')
 
     def __repr__(self):
@@ -100,11 +115,15 @@ class AbstractAlgebraOp(Expr):
 
     @property
     def _op_priority(self):
-        if  type(self.algebra) is AbstractAlgebra:
-            return self.algebra._op_priority
-        return super()._op_priority
+        return getattr(self.algebra, '_op_priority', Expr._op_priority)
+        # if  type(self.algebra) is AbstractAlgebra:
+        #     return self.algebra._op_priority
+        # return super()._op_priority
 
     def __add__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__add__', Expr.__add__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
@@ -112,6 +131,9 @@ class AbstractAlgebraOp(Expr):
         return super().__add__(other, **kwargs)
 
     def __radd__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__radd__', Expr.__radd__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
@@ -119,6 +141,9 @@ class AbstractAlgebraOp(Expr):
         return super().__radd__(other, **kwargs)
 
     def __sub__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__sub__', Expr.__sub__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
@@ -126,6 +151,9 @@ class AbstractAlgebraOp(Expr):
         return super().__sub__(other, **kwargs)
 
     def __rsub__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__rsub__', Expr.__rsub__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__add__', None)
             if _handler is not None:
@@ -133,6 +161,9 @@ class AbstractAlgebraOp(Expr):
         return super().__rsub__(other, **kwargs)
 
     def __mul__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__mul__', Expr.__mul__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__mul__', None)
             if _handler is not None:
@@ -140,6 +171,9 @@ class AbstractAlgebraOp(Expr):
         return super().__mul__(other, **kwargs)
 
     def __rmul__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__rmul__', Expr.__rmul__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__mul__', None)
             if _handler is not None:
@@ -147,6 +181,9 @@ class AbstractAlgebraOp(Expr):
         return super().__rmul__(other, **kwargs)
 
     def __truediv__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__truediv__', Expr.__truediv__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__truediv__', None)
             if _handler is not None:
@@ -154,6 +191,9 @@ class AbstractAlgebraOp(Expr):
         return super().__truediv__(other, **kwargs)
 
     def __rtruediv__(self, other, **kwargs):
+        _handler = getattr(self.algebra, '__rtruediv__', Expr.__rtruediv__ )
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__rtruediv__', None)
             if _handler is not None:
@@ -161,6 +201,10 @@ class AbstractAlgebraOp(Expr):
         return super().__rtruediv__(other, **kwargs)
 
     def __pow__(self, other, mod = None):
+        # Return NotImplemented to return control to Pow.
+        _handler = getattr(self.algebra, '__pow__', Expr.__pow__)
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '__pow__', None)
             if _handler is not None:
@@ -168,7 +212,9 @@ class AbstractAlgebraOp(Expr):
         return super().__pow__(other, mod = mod)
 
     def _pow(self, other, **kwargs):
-        # Return NotImplemented to return control to Pow.
+        _handler = getattr(self.algebra, '_pow', Expr._pow)
+        return _handler(self, other)
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, '_pow', None)
             if _handler is not None:
@@ -176,6 +222,15 @@ class AbstractAlgebraOp(Expr):
         return super()._pow(other, **kwargs)
 
     def collect(self, syms, *args, **kwargs):
+        _handler = getattr(self.algebra, 'collect', None)
+        if _handler is not None:
+            return _handler(self, syms, *args, **kwargs)
+        # kwargs['algebra'] = self.algebra
+        expr = super().collect(syms, *args, **kwargs)
+        if isinstance(expr, Basic):
+            expr.algebra = self.algebra
+        return expr
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, 'collect', None)
             if _handler is not None:
@@ -188,6 +243,15 @@ class AbstractAlgebraOp(Expr):
         return super().collect(syms, *args, **kwargs)
 
     def simplify(self, *args, **kwargs):
+        _handler = getattr(self.algebra, 'simplify', None)
+        if _handler is not None:
+            return _handler(self, *args, **kwargs)
+        kwargs['algebra'] = self.algebra
+        expr = super().simplify(*args, **kwargs)
+        if isinstance(expr, Basic):
+            expr.algebra = self.algebra
+        return expr
+
         if self.algebra is not None:
             _handler = getattr(self.algebra, 'simplify', None)
             if _handler is not None:
@@ -211,6 +275,13 @@ class AbstractAlgebraOp(Expr):
     #     return super().expand(*args, **kwargs)
 
     def subs(self, *args, **kwargs):
+        # Preserve the algebra in the result
+        kwargs['algebra'] = self.algebra
+        expr = super().subs(*args, **kwargs)
+        if isinstance(expr,Basic):
+            expr.algebra = self.algebra
+        return expr
+
         if self.algebra is not None:
             # Preserve the algebra in the result
             kwargs['algebra'] = self.algebra
