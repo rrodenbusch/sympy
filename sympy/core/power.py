@@ -18,9 +18,8 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
-# from .abstractalgebra import AbstractAlgebraOp
-# class Pow(AbstractAlgebraOp):
-class Pow(Expr):
+from .abstractalgebra import AbstractAlgebraOp
+class Pow(AbstractAlgebraOp):
     """
     Defines the expression x**y as "x raised to a power y"
 
@@ -217,7 +216,7 @@ class Pow(Expr):
                 if obj is not None:
                     return obj
         #obj = Expr.__new__(cls, b, e, algebra=algebra)
-        obj = Expr.__new__(cls, b, e)
+        obj = Expr.__new__(cls, b, e, algebra=b.algebra)
         obj = cls._exec_constructor_postprocessors(obj)
         if not isinstance(obj, Pow):
             return obj
