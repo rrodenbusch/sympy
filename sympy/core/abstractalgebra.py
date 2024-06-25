@@ -115,7 +115,6 @@ class AbstractAlgebraOp(Expr):
 
     @property
     def _op_priority(self):
-        return getattr(self.algebra, '_op_priority', super()._op_priority)
         return getattr(self.algebra, '_op_priority', Expr._op_priority)
         # if  type(self.algebra) is AbstractAlgebra:
         #     return self.algebra._op_priority
