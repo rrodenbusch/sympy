@@ -34,11 +34,6 @@ class AExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
     _op_priority = 110
     algebra = AbstractAlgebra(_op_priority = 120, _pow = _new_pow)
 
-    # def __new__(cls, *args, **kwargs):
-    #     obj = super().__new__(cls, *args, **kwargs)
-    #     obj.algebra = cls.algebra
-    #     return obj
-
     def __rtruediv__(self, other, *args, **kwargs):
         e = NotImplemented
         return e
@@ -51,13 +46,7 @@ class AExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
 class BExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
     _op_priority = 50
 
-    # def __new__(cls, *args, **kwargs):
-    #     obj = super().__new__(cls, *args, **kwargs)
-    #     obj.algebra = cls.algebra
-    #     return obj
-
     def __rtruediv__(self, other, *args, **kwargs):
-        # This makes division by the element
         e = NotImplemented
         return e
 
@@ -102,7 +91,6 @@ def test_abstractalgebra_div():
     B = BExpr()
     (a, b) = symbols('a b')
 
-    # truediv and rtruediv not supported in AbstractAlgebra
     raises(TypeError, lambda: A / b)
     raises(TypeError, lambda: A / B)
     raises(TypeError, lambda: A / 2)
@@ -136,4 +124,4 @@ def test_create_abstractexpr():
 
     assert d._op_priority == 140
     assert d.algebra._op_priority == 150
-    # assert not hasattr(d.algebra, '_pow')
+    assert d.algebra._pow == Expr._pow
