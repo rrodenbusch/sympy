@@ -88,9 +88,8 @@ def _unevaluated_Mul(*args):
     return Mul._from_args(newargs)
 
 
-# from .abstractalgebra import AbstractAlgebraOp
-# class Mul(AbstractAlgebraOp, AssocOp):
-class Mul(Expr, AssocOp):
+from .abstractalgebra import AbstractAlgebraOp
+class Mul(AbstractAlgebraOp, AssocOp):
     """
     Expression representing multiplication operation for algebraic field.
 
