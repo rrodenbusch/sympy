@@ -118,6 +118,10 @@ class Pow(AbstractAlgebraOp):
     @cacheit
     def __new__(cls, b, e, evaluate=None, **kwargs):
         # , algebra=None):
+        if getattr(b,'algebra',None) is not None:
+            obj = b.algebra._pow(b,e,evaluate=evaluate)
+            if obj is NotImplemented:
+                return obj
         #if algebra is None:
         #    algebra = getattr(b, 'algebra', None)
         #if algebra is not None and hasattr(algebra, '_pow'):
