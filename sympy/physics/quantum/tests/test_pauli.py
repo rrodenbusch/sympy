@@ -164,18 +164,18 @@ def test_pauli_pow():
     assert isinstance(mul_expr_xy, Mul)
     assert isinstance(mul_expr_xz, Mul)
     assert isinstance(mul_expr_yz, Mul)
-    assert mul_expr_xy.algebra == SigmaOpBase.algebra
+    assert mul_expr_xy._algebra == SigmaOpBase._algebra
 
     assert isinstance(add_expr_xy, Add)
     assert isinstance(add_expr_xz, Add)
     assert isinstance(add_expr_yz, Add)
-    assert add_expr_xy.algebra == SigmaOpBase.algebra
+    assert add_expr_xy._algebra == SigmaOpBase._algebra
 
     assert isinstance(mul_expr_xy ** b, Pow)
-    assert (mul_expr_xy ** b).algebra == SigmaOpBase.algebra
+    assert (mul_expr_xy ** b)._algebra == SigmaOpBase._algebra
 
     assert isinstance(add_expr_xy ** b, Pow)
-    assert (add_expr_xy ** b).algebra == SigmaOpBase.algebra
+    assert (add_expr_xy ** b)._algebra == SigmaOpBase._algebra
 
 
 def test_pauli_power_quantum():
@@ -219,11 +219,11 @@ def test_pauli_expand():
 
     RYGate = EZ * RZ.subs({thz:-1 * pi / 2}) * EX * RX.subs({thx:thy}) * EZ * RZ.subs({thz:pi / 2})
 
-    assert RYGate.algebra == SigmaOpBase.algebra
-    assert collect(RYGate, all).algebra == SigmaOpBase.algebra
-    assert RYGate.collect(all).algebra == SigmaOpBase.algebra
+    assert RYGate._algebra == SigmaOpBase._algebra
+    assert collect(RYGate, all)._algebra == SigmaOpBase._algebra
+    assert RYGate.collect(all)._algebra == SigmaOpBase._algebra
 
-    assert RYGate.expand().algebra == SigmaOpBase.algebra
+    assert RYGate.expand()._algebra == SigmaOpBase._algebra
     assert collect(RYGate, all) == RYGate.collect(all)
     assert collect(RYGate.expand(), all) == RYGate.expand().collect(all)
 
@@ -243,8 +243,8 @@ def test_pauli_expand_simplify():
     FYGate = EZ * RZ.subs({thz:thz1}) * EX * RX.subs({thx:thy}) * EZ * RZ.subs({thz: thz2})
     expected = cos(thy / 2 + ex) * si + i * sin(thy / 2 + ex) * sy
 
-    assert FYGate.subs({thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex}).algebra == SigmaOpBase.algebra
-    assert FYGate.subs({thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex}).expand().algebra == SigmaOpBase.algebra
+    assert FYGate.subs({thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex})._algebra == SigmaOpBase._algebra
+    assert FYGate.subs({thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex}).expand()._algebra == SigmaOpBase._algebra
     assert FYGate.subs({thz1:-1 * pi / 2, thz2:pi / 2, thx:thy, ez:0, ey:ex}).expand().simplify() == expected
 
     from sympy.simplify.simplify import simplify

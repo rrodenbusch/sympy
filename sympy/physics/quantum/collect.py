@@ -33,5 +33,5 @@ def collect(e, syms, *args, **kwargs):
     if len(other_syms):
         expr = core_collect(expr, other_syms, *args, **kwargs)
 
-    expr.algebra = e.algebra
+    expr._algebra = e._algebra
     return(expr)

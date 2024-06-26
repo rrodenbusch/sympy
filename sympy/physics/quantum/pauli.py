@@ -20,10 +20,10 @@ __all__ = [
     'SigmaZBra', 'qsimplify_pauli', 'qcollect_pauli',
 ]
 
-from sympy.core.abstractalgebra import AbstractAlgebraMeta, AbstractAlgebraOp
+from sympy.core.abstractalgebra import AbstractAlgebraMeta, AbstractAlgebraExpr
 
 
-class SigmaOpBase(AbstractAlgebraOp, Operator, metaclass=AbstractAlgebraMeta):
+class SigmaOpBase(AbstractAlgebraExpr, Operator, metaclass=AbstractAlgebraMeta):
     """Pauli sigma operator, base class"""
 
     @property
@@ -48,9 +48,9 @@ class SigmaOpBase(AbstractAlgebraOp, Operator, metaclass=AbstractAlgebraMeta):
         return (False,)
 
     def __new__(cls, *args, **hints):
-        algebra = hints.pop('algebra', cls.algebra)
+        algebra = hints.pop('algebra', cls._algebra)
         e = Operator.__new__(cls, *args, **hints)
-        e.algebra = algebra
+        e._algebra = algebra
         return e
 
     def _eval_commutator_BosonOp(self, other, **hints):
@@ -98,7 +98,7 @@ class SigmaOpBase(AbstractAlgebraOp, Operator, metaclass=AbstractAlgebraMeta):
     def __mul__(self, other, **kwargs):
         if isinstance(other, SigmaI):
             return self
-        kwargs['algebra'] = SigmaOpBase.algebra
+        kwargs['algebra'] = SigmaOpBase._algebra
         return Mul(self, other, **kwargs)
 
     def _pow(self, other, *args, **kwargs):
@@ -122,8 +122,9 @@ class SigmaOpBase(AbstractAlgebraOp, Operator, metaclass=AbstractAlgebraMeta):
             """
             return SigmaI()
         else:
-            kwargs['algebra'] = SigmaOpBase.algebra
+            # kwargs['algebra'] = SigmaOpBase._algebra
             return Pow(self, other, **kwargs)
+            return Pow(self, other)
 
     def collect(self, syms, *args, **kwargs):
         from sympy.physics.quantum.collect import collect as qcollect
@@ -133,10 +134,10 @@ class SigmaOpBase(AbstractAlgebraOp, Operator, metaclass=AbstractAlgebraMeta):
     def simplify(self, *args, **kwargs):
         from sympy import simplify
 
-        kwargs['algebra'] = self.algebra
+        # kwargs['algebra'] = self.algebra
         expr = qsimplify_pauli(self)
         expr = simplify(expr)
-        expr.algebra = self.algebra
+        expr._algebra = self._algebra
         return expr
 
 

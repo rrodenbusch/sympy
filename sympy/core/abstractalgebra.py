@@ -108,268 +108,146 @@ class AbstractAlgebra():
         return f"{self.cls_name}.AbstractAlgebra"
 
 
-class AbstractAlgebraOp(Expr):
+class AbstractAlgebraExpr(Expr):
     """
     Implement methods of abstract algebra in core classes Add, Mul and Pow
     """
 
     @property
     def _op_priority(self):
-        return getattr(self.algebra, '_op_priority', Expr._op_priority)
-        # if  type(self.algebra) is AbstractAlgebra:
-        #     return self.algebra._op_priority
-        # return super()._op_priority
+        return getattr(self._algebra, '_op_priority', Expr._op_priority)
+
 
     def __add__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__add__(self, other)
 
-        _handler = getattr(self.algebra, '__add__', Expr.__add__)
+        _handler = getattr(self._algebra, '__add__', Expr.__add__)
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '__add__', Expr.__add__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__add__', None)
-        #     if _handler is not None:
-        #         return _handler(self, other, algebra = self.algebra)
-        # return super().__add__(other, **kwargs)
 
     def __radd__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__radd__(self, other)
 
-        _handler = getattr(self.algebra, '__radd__', Expr.__radd__)
+        _handler = getattr(self._algebra, '__radd__', Expr.__radd__)
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '__radd__', Expr.__radd__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__add__', None)
-        #     if _handler is not None:
-        #         return _handler(other, self, algebra = self.algebra)
-        # return super().__radd__(other, **kwargs)
 
     def __sub__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__sub__(self, other)
 
-        _handler = getattr(self.algebra, '__sub__', Expr.__sub__ )
+        _handler = getattr(self._algebra, '__sub__', Expr.__sub__ )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '__sub__', Expr.__sub__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__add__', None)
-        #     if _handler is not None:
-        #         return _handler(self, -other, algebra = self.algebra)
-        # return super().__sub__(other, **kwargs)
 
     def __rsub__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__rsub__(self, other)
 
-        _handler = getattr(self.algebra, '__rsub__', Expr.__rsub__ )
+        _handler = getattr(self._algebra, '__rsub__', Expr.__rsub__ )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '__rsub__', Expr.__rsub__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__add__', None)
-        #     if _handler is not None:
-        #         return _handler(other, -self, algebra = self.algebra)
-        # return super().__rsub__(other, **kwargs)
 
     def __mul__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__mul__(self, other)
 
-        _handler = getattr(self.algebra, '__mul__', Expr.__mul__ )
+        _handler = getattr(self._algebra, '__mul__', Expr.__mul__ )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '__mul__', Expr.__mul__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__mul__', None)
-        #     if _handler is not None:
-        #         return _handler(self, other, algebra = self.algebra)
-        # return super().__mul__(other, **kwargs)
 
     def __rmul__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__rmul__(self, other)
 
-        _handler = getattr(self.algebra, '__rmul__', Expr.__rmul__ )
+        _handler = getattr(self._algebra, '__rmul__', Expr.__rmul__ )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
-        #
-        # _handler = getattr(self.algebra, '__rmul__', Expr.__rmul__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__mul__', None)
-        #     if _handler is not None:
-        #         return _handler(other, self, algebra = self.algebra)
-        # return super().__rmul__(other, **kwargs)
+
 
     def __truediv__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__truediv__(self, other)
 
-        _handler = getattr(self.algebra, '__truediv__', Expr.__truediv__ )
+        _handler = getattr(self._algebra, '__truediv__', Expr.__truediv__ )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '__truediv__', Expr.__truediv__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__truediv__', None)
-        #     if _handler is not None:
-        #         return _handler(self, other, algebra = self.algebra)
-        # return super().__truediv__(other, **kwargs)
 
     def __rtruediv__(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__rtruediv__(self, other)
 
-        _handler = getattr(self.algebra, '__rtruediv__', Expr.__rtruediv__ )
+        _handler = getattr(self._algebra, '__rtruediv__', Expr.__rtruediv__ )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '__rtruediv__', Expr.__rtruediv__ )
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__rtruediv__', None)
-        #     if _handler is not None:
-        #         return _handler(self, other, algebra = self.algebra)
-        # return super().__rtruediv__(other, **kwargs)
 
     def __pow__(self, other, mod = None):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr.__pow__(self, other)
 
-        _handler = getattr(self.algebra, '__pow__', Expr.__pow__ )
+        _handler = getattr(self._algebra, '__pow__', Expr.__pow__ )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # Return NotImplemented to return control to Pow.
-        # _handler = getattr(self.algebra, '__pow__', Expr.__pow__)
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '__pow__', None)
-        #     if _handler is not None:
-        #         return _handler(self, other, algebra = self.algebra)
-        # return super().__pow__(other, mod = mod)
 
     def _pow(self, other, **kwargs):
-        if self.algebra is None:
+        if self._algebra is None:
             return Expr._pow(self, other)
 
-        _handler = getattr(self.algebra, '_pow', Expr._pow )
+        _handler = getattr(self._algebra, '_pow', Expr._pow )
         obj = _handler(self,other)
-        obj.algebra = self.algebra
+        obj._algebra = self._algebra
         return obj
 
-        # _handler = getattr(self.algebra, '_pow', Expr._pow)
-        # return _handler(self, other)
-        #
-        # if self.algebra is not None:
-        #     _handler = getattr(self.algebra, '_pow', None)
-        #     if _handler is not None:
-        #         return _handler(self, other, algebra = self.algebra)
-        # return super()._pow(other, **kwargs)
 
     def collect(self, syms, *args, **kwargs):
-        # _handler = getattr(self.algebra, 'collect', None)
-        # if _handler is not None:
-        #     return _handler(self, syms, *args, **kwargs)
-        # # kwargs['algebra'] = self.algebra
-        # expr = super().collect(syms, *args, **kwargs)
-        # if isinstance(expr, Basic):
-        #     expr.algebra = self.algebra
-        # return expr
-
-        if self.algebra is None:
+        if self._algebra is None:
             return super().collect(syms, *args, **kwargs)
 
-        _handler = getattr(self.algebra, 'collect', None)
+        _handler = getattr(self._algebra, 'collect', None)
         if _handler is not None:
             return _handler(self, syms, *args, **kwargs)
-        # kwargs['algebra'] = self.algebra
         expr = super().collect(syms, *args, **kwargs)
-        expr.algebra = self.algebra
+        expr._algebra = self._algebra
         return expr
 
 
     def simplify(self, *args, **kwargs):
-        # _handler = getattr(self.algebra, 'simplify', None)
-        # if _handler is not None:
-        #     return _handler(self, *args, **kwargs)
-        # kwargs['algebra'] = self.algebra
-        # expr = super().simplify(*args, **kwargs)
-        # if isinstance(expr, Basic):
-        #     expr.algebra = self.algebra
-        # return expr
-
-        if self.algebra is None:
+        if self._algebra is None:
             return super().simplify(*args, **kwargs)
 
-        _handler = getattr(self.algebra, 'simplify', None)
+        _handler = getattr(self._algebra, 'simplify', None)
         if _handler is not None:
             return _handler(self, *args, **kwargs)
-        kwargs['algebra'] = self.algebra
         expr = super().simplify(*args, **kwargs)
-        expr.algebra = self.algebra
+        expr._algebra = self._algebra
         return expr
 
 
-    # update expr.expand() to retain the algebra
-    # def expand(self, *args, **kwargs):
-    #     if self.algebra is not None:
-    #         # Preserve the algebra in the result
-    #         kwargs['algebra'] = self.algebra
-    #         expr = super().expand(*args, **kwargs)
-    #         expr.algebra = self.algebra
-    #         return expr
-    #
-    #     return super().expand(*args, **kwargs)
-
     def subs(self, *args, **kwargs):
-#        # Preserve the algebra in the result
-#        kwargs['algebra'] = self.algebra
-#        expr = super().subs(*args, **kwargs)
-#        if isinstance(expr,Basic):
-#            expr.algebra = self.algebra
-#        return expr
-
-        if self.algebra is None:
+        if self._algebra is None:
             return super().subs(*args, **kwargs)
 
-        # Preserve the algebra in the result
         expr = super().subs(*args, **kwargs)
-        expr.algebra = self.algebra
+        expr._algebra = self._algebra
         return expr
 
 
@@ -403,13 +281,13 @@ class AbstractAlgebraMeta(type):
 
     def __new__(cls, name, bases, dct):
         # If an algebra is defined in the class, use it
-        if 'algebra' in dct:
-            dct['_op_priority'] = dct['algebra']._op_priority
+        if '_algebra' in dct:
+            dct['_op_priority'] = dct['_algebra']._op_priority
             return super().__new__(cls, name, bases, dct)
 
         # If class priority is greater than the default, build the algebra
         if '_op_priority' in dct and dct['_op_priority'] > Expr._op_priority:
-            dct['algebra'] = AbstractAlgebra(**dct, cls_name = name)
+            dct['_algebra'] = AbstractAlgebra(**dct, cls_name = name)
             return super().__new__(cls, name, bases, dct)
 
         return super().__new__(cls, name, bases, dct)

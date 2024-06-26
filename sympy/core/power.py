@@ -18,8 +18,8 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
-from .abstractalgebra import AbstractAlgebraOp
-class Pow(AbstractAlgebraOp):
+from .abstractalgebra import AbstractAlgebraExpr
+class Pow(AbstractAlgebraExpr):
     """
     Defines the expression x**y as "x raised to a power y"
 
@@ -116,18 +116,11 @@ class Pow(AbstractAlgebraOp):
     _args: tuple[Expr, Expr]
 
     @cacheit
-    def __new__(cls, b, e, evaluate=None, **kwargs):
-        # , algebra=None):
-        if getattr(b,'algebra',None) is not None:
-            obj = b.algebra._pow(b,e,evaluate=evaluate)
+    def __new__(cls, b, e, evaluate=None):
+        if getattr(b,'_algebra',None) is not None:
+            obj = b._algebra._pow(b,e,evaluate=evaluate)
             if obj is not NotImplemented:
                 return obj
-        #if algebra is None:
-        #    algebra = getattr(b, 'algebra', None)
-        #if algebra is not None and hasattr(algebra, '_pow'):
-        #    obj = algebra._pow( b, e, evaluate=evaluate, algebra=algebra)
-        #    if obj is not NotImplemented:
-        #        return obj
 
         if evaluate is None:
             evaluate = global_parameters.evaluate
@@ -219,8 +212,7 @@ class Pow(AbstractAlgebraOp):
                 obj = b._eval_power(e)
                 if obj is not None:
                     return obj
-        #obj = Expr.__new__(cls, b, e, algebra=algebra)
-        obj = Expr.__new__(cls, b, e, algebra=b.algebra)
+        obj = Expr.__new__(cls, b, e, algebra=b._algebra)
         obj = cls._exec_constructor_postprocessors(obj)
         if not isinstance(obj, Pow):
             return obj

@@ -83,8 +83,8 @@ def _unevaluated_Add(*args):
     return Add._from_args(newargs)
 
 
-from .abstractalgebra import AbstractAlgebraOp
-class Add(AbstractAlgebraOp, AssocOp):
+from .abstractalgebra import AbstractAlgebraExpr
+class Add(AbstractAlgebraExpr, AssocOp):
     """
     Expression representing addition operation for algebraic group.
 
