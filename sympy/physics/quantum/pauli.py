@@ -20,10 +20,10 @@ __all__ = [
     'SigmaZBra', 'qsimplify_pauli', 'qcollect_pauli',
 ]
 
-from sympy.core.abstractalgebra import AbstractAlgebraMeta
+from sympy.core.abstractalgebra import AbstractAlgebraMeta, AbstractAlgebraOp
 
 
-class SigmaOpBase(Operator, metaclass=AbstractAlgebraMeta):
+class SigmaOpBase(AbstractAlgebraOp, Operator, metaclass=AbstractAlgebraMeta):
     """Pauli sigma operator, base class"""
 
     @property

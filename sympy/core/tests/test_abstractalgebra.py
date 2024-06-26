@@ -22,7 +22,7 @@ def _new_pow(self, *args, **kwargs):
     pass
 
 
-class BaseExpr(Expr):
+class BaseExpr(AbstractAlgebraOp):
 
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)

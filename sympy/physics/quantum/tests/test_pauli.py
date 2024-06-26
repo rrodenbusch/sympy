@@ -181,22 +181,26 @@ def test_pauli_pow():
 def test_pauli_power_quantum():
     (a, b) = symbols('a:b')
     ax = a * SigmaX()
-    by = a * SigmaY()
+    by = b * SigmaY()
+    sx2a = sx**a
+
     assert isinstance(a * SigmaI() * SigmaY(), Mul)
     assert isinstance(a * SigmaI() + b * SigmaI(), Add)
     assert isinstance(SigmaX() ** a, Pow)
     assert (a * SigmaX() + b * SigmaY()) ** 0 == SigmaI()
-    assert Pow(a * SigmaX() + b * SigmaY(), 0, algebra=SigmaOpBase.algebra) == SigmaI()
+    assert (ax+by) ** 0 == SigmaI()
 
     assert SigmaX() ** 0 == SigmaI()
     assert (SigmaX() + SigmaY()) ** 0 == SigmaI()
     assert (SigmaX() * SigmaY()) ** 0 == SigmaI()
-    assert (a * SigmaX() + b * SigmaY()) ** 0 == SigmaI()
 
-    assert Pow(sx, a, algebra=SigmaOpBase.algebra).subs(a, 0) == si
-    assert Pow(sx, a, algebra=SigmaOpBase.algebra).subs(a, b) == sx ** b
+    assert Pow(a * SigmaX() + b * SigmaY(), 0) == SigmaI()
+    assert Pow(ax+by, 0) == SigmaI()
+    assert Pow(sx, a).subs(a, 0) == si
+    assert Pow(sx, a).subs(a, b) == sx ** b
 
-    assert isinstance(ax * by, Mul)
+    assert sx2a.subs(a,0) == si
+    assert sx**a.subs(a,0) == si
 
 
 def test_pauli_expand():

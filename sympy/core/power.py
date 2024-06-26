@@ -120,7 +120,7 @@ class Pow(AbstractAlgebraOp):
         # , algebra=None):
         if getattr(b,'algebra',None) is not None:
             obj = b.algebra._pow(b,e,evaluate=evaluate)
-            if obj is NotImplemented:
+            if obj is not NotImplemented:
                 return obj
         #if algebra is None:
         #    algebra = getattr(b, 'algebra', None)
