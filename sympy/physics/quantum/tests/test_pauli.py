@@ -129,9 +129,9 @@ def test_pauli_operators_multiplication():
     assert qsimplify_pauli(sy * sz) == I * sx
     assert qsimplify_pauli(sz * sx) == I * sy
 
-    assert qsimplify_pauli(sy * sx) == - I * sz
-    assert qsimplify_pauli(sz * sy) == - I * sx
-    assert qsimplify_pauli(sx * sz) == - I * sy
+    assert qsimplify_pauli(sy * sx) == -I * sz
+    assert qsimplify_pauli(sz * sy) == -I * sx
+    assert qsimplify_pauli(sx * sz) == -I * sy
 
 
 def test_pauli_operators_multiplication_with_labels():
@@ -148,8 +148,8 @@ def test_pauli_operators_multiplication_with_labels():
     assert isinstance(sy1 * sy2, Mul)
     assert isinstance(sz1 * sz2, Mul)
 
-    assert qsimplify_pauli(sx1 * sy1 * sx2 * sy2) == - sz1 * sz2
-    assert qsimplify_pauli(sy1 * sz1 * sz2 * sx2) == - sx1 * sy2
+    assert qsimplify_pauli(sx1 * sy1 * sx2 * sy2) == -sz1 * sz2
+    assert qsimplify_pauli(sy1 * sz1 * sz2 * sx2) == -sx1 * sy2
 
 
 def test_pauli_pow():
@@ -182,25 +182,25 @@ def test_pauli_power_quantum():
     (a, b) = symbols('a:b')
     ax = a * SigmaX()
     by = b * SigmaY()
-    sx2a = sx**a
+    sx2a = sx ** a
 
     assert isinstance(a * SigmaI() * SigmaY(), Mul)
     assert isinstance(a * SigmaI() + b * SigmaI(), Add)
     assert isinstance(SigmaX() ** a, Pow)
     assert (a * SigmaX() + b * SigmaY()) ** 0 == SigmaI()
-    assert (ax+by) ** 0 == SigmaI()
+    assert (ax + by) ** 0 == SigmaI()
 
     assert SigmaX() ** 0 == SigmaI()
     assert (SigmaX() + SigmaY()) ** 0 == SigmaI()
     assert (SigmaX() * SigmaY()) ** 0 == SigmaI()
 
     assert Pow(a * SigmaX() + b * SigmaY(), 0) == SigmaI()
-    assert Pow(ax+by, 0) == SigmaI()
+    assert Pow(ax + by, 0) == SigmaI()
     assert Pow(sx, a).subs(a, 0) == si
     assert Pow(sx, a).subs(a, b) == sx ** b
 
-    assert sx2a.subs(a,0) == si
-    assert sx**a.subs(a,0) == si
+    assert sx2a.subs(a, 0) == si
+    assert sx ** a.subs(a, 0) == si
 
 
 def test_pauli_expand():
@@ -226,6 +226,20 @@ def test_pauli_expand():
     assert RYGate.expand()._algebra == SigmaOpBase._algebra
     assert collect(RYGate, all) == RYGate.collect(all)
     assert collect(RYGate.expand(), all) == RYGate.expand().collect(all)
+
+
+def test_pauli_simplify():
+    expr1 = Mul(SigmaX(), SigmaI())
+    expr2 = Add(SigmaI(), Mul(SigmaX(), SigmaI()))
+    expr3 = Mul(-1, Add(SigmaI(), Mul(SigmaX(), SigmaI())))
+
+    assert qsimplify_pauli(expr1) == SigmaX()
+    assert qsimplify_pauli(expr2) == SigmaI() + SigmaX()
+    assert qsimplify_pauli(expr3) == -1*(SigmaI() + SigmaX())
+
+    assert (SigmaX() * SigmaI()).simplify() == SigmaX()
+    assert (SigmaI() + SigmaX() * SigmaI()).simplify() == SigmaI() + SigmaX()
+    assert (-1*(SigmaI() + SigmaX() * SigmaI())).simplify() == -1*(SigmaI() + SigmaX())
 
 
 def test_pauli_expand_simplify():
@@ -309,19 +323,19 @@ def test_pauli_states():
     assert qapply(sx * up) == down
     assert qapply(sx * down) == up
     assert qapply(sz * up) == up
-    assert qapply(sz * down) == - down
+    assert qapply(sz * down) == -down
     assert qapply(si * down) == down
     assert qapply(si * up) == up
 
     up = SigmaZBra(0)
     down = SigmaZBra(1)
 
-    assert qapply(up * sx, dagger=True) == down
-    assert qapply(down * sx, dagger=True) == up
-    assert qapply(up * sz, dagger=True) == up
-    assert qapply(down * sz, dagger=True) == - down
-    assert qapply(down * si, dagger=True) == down
-    assert qapply(up * si, dagger=True) == up
+    assert qapply(up * sx, dagger = True) == down
+    assert qapply(down * sx, dagger = True) == up
+    assert qapply(up * sz, dagger = True) == up
+    assert qapply(down * sz, dagger = True) == -down
+    assert qapply(down * si, dagger = True) == down
+    assert qapply(up * si, dagger = True) == up
 
     assert Dagger(SigmaZKet(0)) == SigmaZBra(0)
     assert Dagger(SigmaZBra(1)) == SigmaZKet(1)

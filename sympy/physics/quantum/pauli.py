@@ -886,6 +886,8 @@ def qsimplify_pauli(e):
         nc_s = []
         while nc:
             curr = nc.pop(0)
+            if isinstance(curr, (Add, Mul, Pow, exp,) ):
+                curr = qsimplify_pauli(curr)
 
             while (len(nc) and
                    isinstance(curr, SigmaOpBase) and
