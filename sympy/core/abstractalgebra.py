@@ -97,12 +97,18 @@ class AbstractAlgebra():
     __slots__ = ('cls_name',) + abstract_algebra_attributes
 
     def __init__(self, **kwargs):
-        for method in abstract_algebra_attributes:
-            if method in kwargs:
-                setattr(self, method, kwargs[method])
+        for attr in abstract_algebra_attributes:
+            if attr in kwargs:
+                setattr(self, attr, kwargs[attr])
             else:
-                setattr(self, method, default_algebra[method] )
+                setattr(self, attr, default_algebra[attr] )
         self.cls_name = kwargs.get('cls_name', 'Unknown')
+
+    def copy(self, *args, **kwargs):
+        new = AbstractAlgebra(cls_name=self.cls_name)
+        for attr in abstract_algebra_attributes:
+            setattr(new, attr, getattr(self, attr, None))
+        return new
 
     def __repr__(self):
         return f"{self.cls_name}.AbstractAlgebra"

@@ -4,20 +4,6 @@ from sympy.core.symbol import symbols
 
 from sympy.testing.pytest import raises
 
-
-def test_abstractalgebra_class():
-    b = AbstractAlgebra()
-    assert b._op_priority == 10
-
-    b = AbstractAlgebra(_op_priority = 100)
-    assert b._op_priority == 100
-
-
-def test_create_abstractalgebraop():
-    b = AbstractAlgebraExpr()
-    assert isinstance(b, Expr)
-
-
 def _new_pow(self, *args, **kwargs):
     pass
 
@@ -78,6 +64,19 @@ class CExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
         return e
 
 
+def test_abstractalgebra_class():
+    b = AbstractAlgebra()
+    assert b._op_priority == 10
+
+    b = AbstractAlgebra(_op_priority = 100)
+    assert b._op_priority == 100
+
+
+def test_create_abstractalgebraop():
+    b = AbstractAlgebraExpr()
+    assert isinstance(b, Expr)
+
+
 def test_abstractalgebra_repr():
     assert repr(AbstractAlgebra(cls_name = 'test_repr')) == 'test_repr.AbstractAlgebra'
     assert repr(AbstractAlgebra()) == 'Unknown.AbstractAlgebra'
@@ -102,6 +101,21 @@ def test_abstractalgebra_div():
     D = C / 2
     assert(C._algebra == BExpr._algebra)
     assert(D._algebra == BExpr._algebra)
+
+
+def test_copy_abstractalgebra():
+    org = BExpr._algebra
+    new = BExpr._algebra.copy()
+
+    assert id(org) == id(BExpr._algebra)
+    assert id(new) != id(BExpr._algebra)
+    assert org.__slots__ == new.__slots__
+    for attr in org.__slots__:
+        assert( getattr(org, attr) == getattr(new, attr))
+    priority = org._op_priority
+    new._op_priority = org._op_priority + 1
+    assert org._op_priority == priority
+    assert new._op_priority != priority
 
 
 def test_create_abstractexpr():
