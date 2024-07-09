@@ -10,6 +10,7 @@ from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand, PoleError)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
+from .operatoralgebra import OperatorAlgebraExpr
 from .parameters import global_parameters
 from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
@@ -18,8 +19,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
-from .abstractalgebra import AbstractAlgebraExpr
-class Pow(AbstractAlgebraExpr):
+class Pow(OperatorAlgebraExpr):
     """
     Defines the expression x**y as "x raised to a power y"
 

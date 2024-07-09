@@ -3818,9 +3818,9 @@ def test_sympy__physics__quantum__fermion__FermionFockBra():
     assert _test_args(FermionFockBra(1))
 
 
-def test_sympy__core__abstractalgebra__AbstractAlgebraExpr():
-    from sympy.core.abstractalgebra import AbstractAlgebraExpr
-    assert _test_args(AbstractAlgebraExpr())
+def test_sympy__core__operatoralgebra__OperatorAlgebraExpr():
+    from sympy.core.operatoralgebra import OperatorAlgebraExpr
+    assert _test_args(OperatorAlgebraExpr())
 
 
 def test_sympy__physics__quantum__pauli__SigmaOpBase():

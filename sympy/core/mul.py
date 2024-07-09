@@ -7,6 +7,7 @@ import operator
 from .sympify import sympify
 from .basic import Basic, _args_sortkey
 from .singleton import S
+from .operatoralgebra import OperatorAlgebraExpr
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .intfunc import integer_nthroot, trailing
@@ -88,8 +89,7 @@ def _unevaluated_Mul(*args):
     return Mul._from_args(newargs)
 
 
-from .abstractalgebra import AbstractAlgebraExpr
-class Mul(AbstractAlgebraExpr, AssocOp):
+class Mul(OperatorAlgebraExpr, AssocOp):
     """
     Expression representing multiplication operation for algebraic field.
 

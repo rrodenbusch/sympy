@@ -1,16 +1,15 @@
-"""Support classes for Abstract Algebras
+"""Support classes for Abstract Operator Algebras
 
 
-    AbstractAlgebra: The class defining the abstract algebra.
-    AbstractAlgebraOp: The subclass of Expr which implements any operations
+    OperatorAlgebra: The class defining the abstract algebra.
+    OperatorAlgebraExpr: The subclass of Expr which implements any operations
         in the algebra which differ from the core/default algebra
-    AbstractAlgebraMeta: A meta-class than any class may include which will
-        automatically generate and manage the abstract algebra for the class.
+    OperatorAlgebraMeta: A meta-class than any class may include which will
+        automatically generate and manage the operator algebra for the class.
 
-    abstract_algebra_attributes: The tuple of attributes used to implement
-        the abstract algebra. If a class defines any of these and uses
-        metaclass=AbstractAlgebraMeta, then an algebra will be automatically
-        implemented.
+    operator_algebra_attributes: The tuple of attributes used to implement
+        the algebra. If a inherits OperatroAlgebraMeta as a metaclass,
+        then an algebra will be automatically defined.
 
 
     Explanation
@@ -21,22 +20,22 @@
     default algebra as well through specific treatment in the various classes
     and functions. Other algebras, such as rings, operator algebras or the
     C*Algebra, common in quantum physics, require abstraction from this default
-    algebra.  The abstract algebra classes rely on the @call_highest_priority
+    algebra.  The operator algebra classes rely on the @call_highest_priority
     decorator and associated _op_priority attribute.
 
 
     Priority of algebras
     ====================
 
-    AbstractAlgebraMeta selects from algebras in the following order:
+    OperatorAlgebraMeta selects from algebras in the following order:
         1. An algebra defined by the class itself,
         2. An implicit algebra defined in the class,
-        3. An algebra defined by the bases of the class.
+        3. An algebra defined by the bases of the class. [TBD]
 
     A class implicitly defines an algebra if it has an _op_priority
-    greater than the default value, Expr._op_priority. The AbstractAlgebra
+    greater than the default value, Expr._op_priority. The OperatorAlgebra
     is built from the _op_priority and any class methods listed in
-    abstract_algebra_attributes.
+    operator_algebra_attributes.
 
 
     Supported Methods
@@ -52,10 +51,16 @@
 
         Expr, Add, Mul, Pow
 
+
+    To Do
+    =====
+    Implement the metaclass search the class bases for an algebra.
+
 """
 from .expr import Expr
 from .basic import Basic
-abstract_algebra_attributes = ('_op_priority',
+
+operator_algebra_attributes = ('_op_priority',
                                '__add__', '__radd__',
                                '__pow__', '_pow',
                                '__mul__', '__rmul__',
@@ -77,7 +82,7 @@ default_algebra = {'_op_priority' : Expr._op_priority,
                    }
 
 
-class AbstractAlgebra():
+class OperatorAlgebra():
     """
     The class holding operations which differ from the numeric field algebra
     defined by the core sympy.
@@ -90,14 +95,14 @@ class AbstractAlgebra():
     default algebra as well through specific treatment in the various classes
     and functions. Other algebras, such as rings, operator algebras or the
     C*Algebra, common in quantum physics, require abstraction from this default
-    algebra.  The abstract algebra classes rely on the @call_highest_priority
+    algebra.  The operator algebra classes rely on the @call_highest_priority
     decorator and associated _op_priority attribute.
 
     """
-    __slots__ = ('cls_name',) + abstract_algebra_attributes
+    __slots__ = ('cls_name',) + operator_algebra_attributes
 
     def __init__(self, **kwargs):
-        for attr in abstract_algebra_attributes:
+        for attr in operator_algebra_attributes:
             if attr in kwargs:
                 setattr(self, attr, kwargs[attr])
             else:
@@ -105,18 +110,18 @@ class AbstractAlgebra():
         self.cls_name = kwargs.get('cls_name', 'Unknown')
 
     def copy(self, *args, **kwargs):
-        new = AbstractAlgebra(cls_name=self.cls_name)
-        for attr in abstract_algebra_attributes:
+        new = OperatorAlgebra(cls_name=self.cls_name)
+        for attr in operator_algebra_attributes:
             setattr(new, attr, getattr(self, attr, None))
         return new
 
     def __repr__(self):
-        return f"{self.cls_name}.AbstractAlgebra"
+        return f"{self.cls_name}.OperatorAlgebra"
 
 
-class AbstractAlgebraExpr(Expr):
+class OperatorAlgebraExpr(Expr):
     """
-    Implement methods of abstract algebra in core classes Add, Mul and Pow
+    Implement methods of operator algebra in core classes Add, Mul and Pow
     """
 
     @property
@@ -257,15 +262,15 @@ class AbstractAlgebraExpr(Expr):
         return expr
 
 
-class AbstractAlgebraMeta(type):
+class OperatorAlgebraMeta(type):
     """
-    Metaclass to generate an AbstractAlgebra for a class
+    Metaclass to generate an OperatorAlgebra for a class
 
 
     Priority of algebras
     ====================
 
-    AbstractAlgebraMeta selects from algebras in the following order:
+    OperatorAlgebraMeta selects from algebras in the following order:
         1. An algebra defined by the class itself,
         2. An implicit algebra defined in the class,
         3. An algebra defined by the bases of the class.
@@ -273,7 +278,7 @@ class AbstractAlgebraMeta(type):
     A class implicitly defines an algebra if it has an _op_priority
     greater than the default, Expr._op_priority. The algebra consists
     of the defined _op_priority and any of class methods from the
-    abstract_algebra_attributes list.
+    operator_algebra_attributes list.
 
 
     See Also
@@ -293,7 +298,7 @@ class AbstractAlgebraMeta(type):
 
         # If class priority is greater than the default, build the algebra
         if '_op_priority' in dct and dct['_op_priority'] > Expr._op_priority:
-            dct['_algebra'] = AbstractAlgebra(**dct, cls_name = name)
+            dct['_algebra'] = OperatorAlgebra(**dct, cls_name = name)
             return super().__new__(cls, name, bases, dct)
 
         return super().__new__(cls, name, bases, dct)

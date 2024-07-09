@@ -3,6 +3,7 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import I
+from sympy.core.operatoralgebra import OperatorAlgebraMeta, OperatorAlgebraExpr
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
@@ -20,10 +21,8 @@ __all__ = [
     'SigmaZBra', 'qsimplify_pauli', 'qcollect_pauli',
 ]
 
-from sympy.core.abstractalgebra import AbstractAlgebraMeta, AbstractAlgebraExpr
 
-
-class SigmaOpBase(AbstractAlgebraExpr, Operator, metaclass=AbstractAlgebraMeta):
+class SigmaOpBase(OperatorAlgebraExpr, Operator, metaclass=OperatorAlgebraMeta):
     """Pauli sigma operator, base class"""
 
     @property
@@ -92,7 +91,7 @@ class SigmaOpBase(AbstractAlgebraExpr, Operator, metaclass=AbstractAlgebraMeta):
     def _sympystr(self, printer, *args):
         return self._sympyrepr(printer, *args)
 
-    #=============  Abstract Algebra Definitions ============
+    #=============  Operator Algebra Definition ============
     _op_priority = 200
 
     def __mul__(self, other, **kwargs):

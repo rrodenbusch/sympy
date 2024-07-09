@@ -1,4 +1,4 @@
-from sympy.core.abstractalgebra import AbstractAlgebra, AbstractAlgebraExpr, AbstractAlgebraMeta
+from sympy.core.operatoralgebra import OperatorAlgebra, OperatorAlgebraExpr, OperatorAlgebraMeta
 from sympy.core.expr import Expr
 from sympy.core.symbol import symbols
 
@@ -8,7 +8,7 @@ def _new_pow(self, *args, **kwargs):
     pass
 
 
-class BaseExpr(AbstractAlgebraExpr):
+class BaseExpr(OperatorAlgebraExpr):
 
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
@@ -16,9 +16,9 @@ class BaseExpr(AbstractAlgebraExpr):
         return obj
 
 
-class AExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
+class AExpr(BaseExpr, metaclass = OperatorAlgebraMeta):
     _op_priority = 110
-    _algebra = AbstractAlgebra(_op_priority = 120, _pow = _new_pow)
+    _algebra = OperatorAlgebra(_op_priority = 120, _pow = _new_pow)
 
     def __rtruediv__(self, other, *args, **kwargs):
         e = NotImplemented
@@ -29,7 +29,7 @@ class AExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
         return e
 
 
-class BExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
+class BExpr(BaseExpr, metaclass = OperatorAlgebraMeta):
     _op_priority = 50
 
     def __rtruediv__(self, other, *args, **kwargs):
@@ -47,9 +47,9 @@ class BExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
         return super()._pow(*args, **kwargs)
 
 
-class CExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
+class CExpr(BaseExpr, metaclass = OperatorAlgebraMeta):
     _op_priority = 130
-    _algebra = AbstractAlgebra(_op_priority = 140, _pow = _new_pow, cls_name = 'cexpr')
+    _algebra = OperatorAlgebra(_op_priority = 140, _pow = _new_pow, cls_name = 'cexpr')
 
     def __init__(self, *args, **kwargs):
         if 'algebra' in kwargs:
@@ -64,28 +64,28 @@ class CExpr(BaseExpr, metaclass = AbstractAlgebraMeta):
         return e
 
 
-def test_abstractalgebra_class():
-    b = AbstractAlgebra()
+def test_operatoralgebra_class():
+    b = OperatorAlgebra()
     assert b._op_priority == 10
 
-    b = AbstractAlgebra(_op_priority = 100)
+    b = OperatorAlgebra(_op_priority = 100)
     assert b._op_priority == 100
 
 
-def test_create_abstractalgebraop():
-    b = AbstractAlgebraExpr()
+def test_operatoralgebra_create():
+    b = OperatorAlgebraExpr()
     assert isinstance(b, Expr)
 
 
-def test_abstractalgebra_repr():
-    assert repr(AbstractAlgebra(cls_name = 'test_repr')) == 'test_repr.AbstractAlgebra'
-    assert repr(AbstractAlgebra()) == 'Unknown.AbstractAlgebra'
-    assert repr(AExpr()._algebra) == 'Unknown.AbstractAlgebra'
-    assert repr(BExpr()._algebra) == 'BExpr.AbstractAlgebra'
-    assert repr(CExpr()._algebra) == 'cexpr.AbstractAlgebra'
+def test_operatoralgebra_repr():
+    assert repr(OperatorAlgebra(cls_name = 'test_repr')) == 'test_repr.OperatorAlgebra'
+    assert repr(OperatorAlgebra()) == 'Unknown.OperatorAlgebra'
+    assert repr(AExpr()._algebra) == 'Unknown.OperatorAlgebra'
+    assert repr(BExpr()._algebra) == 'BExpr.OperatorAlgebra'
+    assert repr(CExpr()._algebra) == 'cexpr.OperatorAlgebra'
 
 
-def test_abstractalgebra_div():
+def test_operatoralgebra_div():
     A = AExpr()
     B = BExpr()
     (a, b) = symbols('a b')
@@ -103,7 +103,7 @@ def test_abstractalgebra_div():
     assert(D._algebra == BExpr._algebra)
 
 
-def test_copy_abstractalgebra():
+def test_operatoralgebra_copy():
     org = BExpr._algebra
     new = BExpr._algebra.copy()
 
@@ -118,7 +118,7 @@ def test_copy_abstractalgebra():
     assert new._op_priority != priority
 
 
-def test_create_abstractexpr():
+def test_operatoralgebra_expr():
     a = AExpr()
     assert isinstance(a, Expr)
     assert a._op_priority == 120
@@ -134,7 +134,7 @@ def test_create_abstractexpr():
     assert c._op_priority == 140
     assert c._algebra._pow == _new_pow
 
-    d = CExpr(algebra = AbstractAlgebra(_op_priority = 150))
+    d = CExpr(algebra = OperatorAlgebra(_op_priority = 150))
 
     assert d._op_priority == 140
     assert d._algebra._op_priority == 150

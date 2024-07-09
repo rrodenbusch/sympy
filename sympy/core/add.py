@@ -6,6 +6,7 @@ from .basic import _args_sortkey
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
+from .operatoralgebra import OperatorAlgebraExpr
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import equal_valued
@@ -83,8 +84,7 @@ def _unevaluated_Add(*args):
     return Add._from_args(newargs)
 
 
-from .abstractalgebra import AbstractAlgebraExpr
-class Add(AbstractAlgebraExpr, AssocOp):
+class Add(OperatorAlgebraExpr, AssocOp):
     """
     Expression representing addition operation for algebraic group.
 
