@@ -118,9 +118,11 @@ class Pow(OperatorAlgebraExpr):
     @cacheit
     def __new__(cls, b, e, evaluate=None):
         if getattr(b,'_algebra',None) is not None:
-            obj = b._algebra._pow(b,e,evaluate=evaluate)
-            if obj is not NotImplemented:
-                return obj
+            _handler = getattr(b._algebra, '_pow', Expr._pow)
+            if _handler is not Expr._pow:
+                obj = _handler(b,e)
+                if obj is not NotImplemented:
+                    return obj
 
         if evaluate is None:
             evaluate = global_parameters.evaluate

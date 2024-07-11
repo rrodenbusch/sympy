@@ -64,12 +64,23 @@ class CExpr(BaseExpr, metaclass = OperatorAlgebraMeta):
         return e
 
 
-def test_operatoralgebra_class():
-    b = OperatorAlgebra()
-    assert b._op_priority == 10
+def test_default_operatoralgebra():
+    (a,b) = symbols('a b')
+    c = BaseExpr(a)
+    c._algebra = OperatorAlgebra()
+    d = BaseExpr(b)
+    d._algebra = c._algebra
+    assert (c+d)._algebra == c._algebra
+    assert (c*d)._algebra == c._algebra
+    assert (c*b)._algebra == c._algebra
+    assert (c**2)._algebra == c._algebra
+    assert (c**d)._algebra == c._algebra
+    assert (c/d)._algebra == c._algebra
 
-    b = OperatorAlgebra(_op_priority = 100)
-    assert b._op_priority == 100
+
+def test_operatoralgebra_class():
+    assert OperatorAlgebra()._op_priority == 10
+    assert OperatorAlgebra(_op_priority = 100)._op_priority == 100
 
 
 def test_operatoralgebra_create():
