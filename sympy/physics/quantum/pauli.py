@@ -36,7 +36,9 @@ class SigmaOpBase(OperatorAlgebraExpr, Operator, metaclass=OperatorAlgebraMeta):
         return self.dagger()
 
     def commute(self, other):
-        return Commutator(self, other)
+        comm = Commutator(self,other)
+        comm._algebra = self._algebra
+        return comm
 
     @property
     def use_name(self):
