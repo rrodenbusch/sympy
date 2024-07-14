@@ -987,7 +987,9 @@ class Mul(OperatorAlgebraExpr, AssocOp):
             for kvals, c in multinomial_coefficients_iterator(m, n):
                 p = Mul(*[arg.diff((s, k)) for k, arg in zip(kvals, args)])
                 terms.append(c * p)
-            return Add(*terms)
+            deriv = Add(*terms)
+            deriv._algebra = self._algebra
+            return deriv
         from sympy.concrete.summations import Sum
         from sympy.functions.combinatorial.factorials import factorial
         from sympy.functions.elementary.miscellaneous import Max
