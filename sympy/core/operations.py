@@ -456,7 +456,7 @@ this object, use the * or + operator instead.
             terms = [term.doit(**hints) for term in self.args]
         else:
             terms = self.args
-        return self.func(*terms, evaluate=True)
+        return self.func(*terms, evaluate=True, algebra=self._algebra)
 
 class ShortCircuit(Exception):
     pass

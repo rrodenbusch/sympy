@@ -98,7 +98,7 @@ class Commutator(Expr):
         r = cls.eval(A, B)
         if r is not None:
             return r
-        obj = Expr.__new__(cls, A, B)
+        obj = Expr.__new__(cls, A, B, algebra=getattr(A,'_algebra',getattr(B,'_algebra',None)))
         return obj
 
     @classmethod
