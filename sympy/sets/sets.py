@@ -1041,7 +1041,7 @@ class Interval(Set):
     """
     is_Interval = True
 
-    def __new__(cls, start, end, left_open=False, right_open=False):
+    def __new__(cls, start, end, left_open=False, right_open=False, **kwargs):
 
         start = _sympify(start)
         end = _sympify(end)
@@ -1079,7 +1079,7 @@ class Interval(Set):
         if start == S.Infinity or end == S.NegativeInfinity:
             return S.EmptySet
 
-        return Basic.__new__(cls, start, end, left_open, right_open)
+        return Basic.__new__(cls, start, end, left_open, right_open, **kwargs)
 
     @property
     def start(self):
@@ -1331,7 +1331,7 @@ class Union(Set, LatticeOp):
 
         args = list(ordered(args, Set._infimum_key))
 
-        obj = Basic.__new__(cls, *args)
+        obj = Basic.__new__(cls, *args, **kwargs)
         obj._argset = frozenset(args)
         return obj
 
@@ -1494,7 +1494,7 @@ class Intersection(Set, LatticeOp):
     def zero(self):
         return S.EmptySet
 
-    def __new__(cls, *args , evaluate=None):
+    def __new__(cls, *args , evaluate=None, **kwargs):
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
@@ -1508,7 +1508,7 @@ class Intersection(Set, LatticeOp):
 
         args = list(ordered(args, Set._infimum_key))
 
-        obj = Basic.__new__(cls, *args)
+        obj = Basic.__new__(cls, *args, **kwargs)
         obj._argset = frozenset(args)
         return obj
 
@@ -1715,12 +1715,12 @@ class Complement(Set):
 
     is_Complement = True
 
-    def __new__(cls, a, b, evaluate=True):
+    def __new__(cls, a, b, evaluate=True, **kwargs):
         a, b = map(_sympify, (a, b))
         if evaluate:
             return Complement.reduce(a, b)
 
-        return Basic.__new__(cls, a, b)
+        return Basic.__new__(cls, a, b, **kwargs)
 
     @staticmethod
     def reduce(A, B):
@@ -1967,7 +1967,7 @@ class FiniteSet(Set):
                     dargs[i] = i
         _args_set = set(dargs.values())
         args = list(ordered(_args_set, Set._infimum_key))
-        obj = Basic.__new__(cls, *args)
+        obj = Basic.__new__(cls, *args, **kwargs)
         obj._args_set = _args_set
         return obj
 
@@ -2178,11 +2178,11 @@ class SymmetricDifference(Set):
 
     is_SymmetricDifference = True
 
-    def __new__(cls, a, b, evaluate=True):
+    def __new__(cls, a, b, evaluate=True, **kwargs):
         if evaluate:
             return SymmetricDifference.reduce(a, b)
 
-        return Basic.__new__(cls, a, b)
+        return Basic.__new__(cls, a, b, **kwargs)
 
     @staticmethod
     def reduce(A, B):
@@ -2249,7 +2249,7 @@ class DisjointUnion(Set):
     https://en.wikipedia.org/wiki/Disjoint_union
     """
 
-    def __new__(cls, *sets):
+    def __new__(cls, *sets, **kwargs):
         dj_collection = []
         for set_i in sets:
             if isinstance(set_i, Set):
@@ -2257,7 +2257,7 @@ class DisjointUnion(Set):
             else:
                 raise TypeError("Invalid input: '%s', input args \
                     to DisjointUnion must be Sets" % set_i)
-        obj = Basic.__new__(cls, *dj_collection)
+        obj = Basic.__new__(cls, *dj_collection, **kwargs)
         return obj
 
     @property

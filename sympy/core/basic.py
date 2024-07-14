@@ -227,7 +227,7 @@ class Basic(Printable):
 
     kind: Kind = UndefinedKind
 
-    def __new__(cls, *args, algebra=None):
+    def __new__(cls, *args, algebra=None, **kwargs):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
