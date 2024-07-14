@@ -93,6 +93,7 @@ this object, use the * or + operator instead.
         if len(args) == 0:
             return cls.identity
         if len(args) == 1:
+            args[0]._algebra = kwargs.pop('algebra',None)
             return args[0]
 
         c_part, nc_part, order_symbols = cls.flatten(args)

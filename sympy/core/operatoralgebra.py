@@ -118,6 +118,16 @@ class OperatorAlgebra():
     def __repr__(self):
         return f"{self.cls_name}.OperatorAlgebra"
 
+    def __eq__(self, other):
+        if id(self) == id(other):
+            return True
+        if not isinstance(other,OperatorAlgebra):
+            return False
+        for attr in self.__slots__:
+            if getattr(self, attr) != getattr(other,attr):
+                return False
+        return True
+
 
 class OperatorAlgebraExpr(Expr):
     """

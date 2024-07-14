@@ -1401,7 +1401,7 @@ class Derivative(Expr):
                 # that have defined is_scalar=True but have no
                 # _eval_derivative defined
                 return S.One
-            return Expr.__new__(cls, expr, *variable_count)
+            return Expr.__new__(cls, expr, *variable_count, algebra=expr._algebra)
 
         # evaluate the derivative by calling _eval_derivative method
         # of expr for each variable
@@ -1466,7 +1466,7 @@ class Derivative(Expr):
             if isinstance(expr, Derivative):
                 unhandled = list(expr.variable_count) + unhandled
                 expr = expr.expr
-            expr = Expr.__new__(cls, expr, *unhandled)
+            expr = Expr.__new__(cls, expr, *unhandled, algebra=expr._algebra)
 
         if (nderivs > 1) == True and kwargs.get('simplify', True):
             from .exprtools import factor_terms
