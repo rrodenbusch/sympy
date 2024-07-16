@@ -1079,7 +1079,7 @@ class Interval(Set):
         if start == S.Infinity or end == S.NegativeInfinity:
             return S.EmptySet
 
-        return Basic.__new__(cls, start, end, left_open, right_open, **kwargs)
+        return Basic.__new__(cls, start, end, left_open, right_open)
 
     @property
     def start(self):
@@ -1508,7 +1508,7 @@ class Intersection(Set, LatticeOp):
 
         args = list(ordered(args, Set._infimum_key))
 
-        obj = Basic.__new__(cls, *args, **kwargs)
+        obj = Basic.__new__(cls, *args)
         obj._argset = frozenset(args)
         return obj
 
@@ -1720,7 +1720,7 @@ class Complement(Set):
         if evaluate:
             return Complement.reduce(a, b)
 
-        return Basic.__new__(cls, a, b, **kwargs)
+        return Basic.__new__(cls, a, b)
 
     @staticmethod
     def reduce(A, B):
@@ -1967,7 +1967,7 @@ class FiniteSet(Set):
                     dargs[i] = i
         _args_set = set(dargs.values())
         args = list(ordered(_args_set, Set._infimum_key))
-        obj = Basic.__new__(cls, *args, **kwargs)
+        obj = Basic.__new__(cls, *args)
         obj._args_set = _args_set
         return obj
 
@@ -2182,7 +2182,7 @@ class SymmetricDifference(Set):
         if evaluate:
             return SymmetricDifference.reduce(a, b)
 
-        return Basic.__new__(cls, a, b, **kwargs)
+        return Basic.__new__(cls, a, b)
 
     @staticmethod
     def reduce(A, B):
@@ -2257,7 +2257,7 @@ class DisjointUnion(Set):
             else:
                 raise TypeError("Invalid input: '%s', input args \
                     to DisjointUnion must be Sets" % set_i)
-        obj = Basic.__new__(cls, *dj_collection, **kwargs)
+        obj = Basic.__new__(cls, *dj_collection)
         return obj
 
     @property
