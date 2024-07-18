@@ -35,7 +35,7 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True, **kwargs):
         if not args:
             return cls.identity
 
