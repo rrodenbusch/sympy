@@ -98,7 +98,12 @@ class Commutator(Expr):
         r = cls.eval(A, B)
         if r is not None:
             return r
-        obj = Expr.__new__(cls, A, B)
+        a_priority = getattr(A,'_op_priority',1)
+        if getattr(B,'_op_priority', 0) > a_priority:
+            algebra = B._algebra
+        else:
+            algebra = getattr(A,'_algebra',None)
+        obj = Expr.__new__(cls, A, B, algebra=algebra)
         return obj
 
     @classmethod
@@ -114,7 +119,7 @@ class Commutator(Expr):
         ca, nca = a.args_cnc()
         cb, ncb = b.args_cnc()
         c_part = ca + cb
-        if c_part:
+        if c_part:  # replace outer Mul with * to keep algebra
             return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
         # Canonical ordering of arguments
