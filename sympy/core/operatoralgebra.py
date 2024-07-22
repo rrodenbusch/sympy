@@ -116,7 +116,7 @@ class OperatorAlgebra():
         return new
 
     def _hashable_content(self):
-        return set([getattr(self,x,None) for x in self.__slots__])
+        return (getattr(self,x,None) for x in self.__slots__)
 
     def __repr__(self):
         return f"{self.cls_name}.OperatorAlgebra"
