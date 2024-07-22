@@ -93,6 +93,9 @@ class SigmaOpBase(OperatorAlgebraExpr, Operator, metaclass=OperatorAlgebraMeta):
     def _sympystr(self, printer, *args):
         return self._sympyrepr(printer, *args)
 
+    def _diff_wrt(self):
+       return True
+
     #=============  Operator Algebra Definition ============
     _op_priority = 200
 
