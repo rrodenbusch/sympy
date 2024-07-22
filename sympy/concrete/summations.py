@@ -1158,10 +1158,13 @@ def eval_sum_symbolic(f, limits):
 
     if f.is_Add:
         L, R = f.as_two_terms()
-        lrsum = telescopic(L, R, (i, a, b))
+        try:
+            lrsum = telescopic(L, R, (i, a, b))
 
-        if lrsum:
-            return lrsum
+            if lrsum:
+                return lrsum
+        except PolynomialError:
+            return None
 
         # Try factor out everything not including i
         without_i, with_i = f.as_independent(i)
