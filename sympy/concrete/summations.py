@@ -249,7 +249,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 a, b = b + 1, a - 1
                 f = -f
 
-            newf = eval_sum(f, (i, a, b))
+            newf = eval_sum(f, (i, a, b), **hints)
             if newf is None:
                 if f == self.function:
                     zeta_function = self.eval_zeta_function(f, (i, a, b))
@@ -1006,7 +1006,7 @@ def telescopic(L, R, limits):
         return telescopic_direct(L, R, s, (i, a, b))
 
 
-def eval_sum(f, limits):
+def eval_sum(f, limits, **hints):
     (i, a, b) = limits
     if f.is_zero:
         return S.Zero
@@ -1045,9 +1045,11 @@ def eval_sum(f, limits):
         return None
     # Try to do it symbolically. Even when the number of terms is
     # known, this can save time when b-a is big.
-    value = eval_sum_symbolic(f.expand(), (i, a, b))
-    if value is not None:
-        return value
+    if hints.get('eval_sum_symbolic', True):
+        value = eval_sum_symbolic(f.expand(), (i, a, b))
+        if value is not None:
+            return value
+
     # Do it directly
     if definite:
         return eval_sum_direct(f, (i, a, b))
