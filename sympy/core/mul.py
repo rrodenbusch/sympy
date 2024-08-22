@@ -1246,7 +1246,7 @@ class Mul(OperatorAlgebraExpr, AssocOp):
                 nc += 1
             if e1 is None:
                 e1 = e
-            elif e != e1 or nc > 1:
+            elif e != e1 or nc > 1 or not e.is_Integer:
                 return self, S.One
             bases.append(b)
         return self.func(*bases), e1
