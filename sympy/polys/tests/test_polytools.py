@@ -445,6 +445,9 @@ def test_Poly__new__():
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x,
              modulus=65537, symmetric=False)
 
+    N = 10**100
+    assert Poly(-1, x, modulus=N, symmetric=False).as_expr() == N - 1
+
     assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
     assert isinstance(Poly(x**2 + x + I + 1.0).get_domain(), ComplexField)
 
@@ -1540,6 +1543,10 @@ def test_Poly_clear_denoms():
     coeff, poly = Poly(x/2 + 1, x).clear_denoms()
     assert coeff == 2 and poly == Poly(
         x + 2, x, domain='QQ') and poly.get_domain() == QQ
+
+    coeff, poly = Poly(2*x**2 + 3, modulus=5).clear_denoms()
+    assert coeff == 1 and poly == Poly(
+        2*x**2 + 3, x, modulus=5) and poly.get_domain() == FF(5)
 
     coeff, poly = Poly(x/2 + 1, x).clear_denoms(convert=True)
     assert coeff == 2 and poly == Poly(
@@ -2749,6 +2756,8 @@ def test_factor():
 
     assert factor_list(x**3 - x*y**2, t, w, x) == (
         1, [(x, 1), (x - y, 1), (x + y, 1)])
+    assert factor_list((x+1)*(x**6-1)) == (
+        1, [(x - 1, 1), (x + 1, 2), (x**2 - x + 1, 1), (x**2 + x + 1, 1)])
 
     # https://github.com/sympy/sympy/issues/24952
     s2, s2p, s2n = sqrt(2), 1 + sqrt(2), 1 - sqrt(2)
@@ -3066,6 +3075,15 @@ def test_real_roots():
     assert Poly(f).real_roots() == [Rational(-1, 2), 2, 2]
     assert Poly(g).real_roots() == [rootof(g, 0)]
 
+    # testing extension
+    f = x**2 - sqrt(2)
+    roots = [-2**(S(1)/4), 2**(S(1)/4)]
+    raises(NotImplementedError, lambda: real_roots(f))
+    raises(NotImplementedError, lambda: real_roots(Poly(f, x)))
+    assert real_roots(f, extension=True) == roots
+    assert real_roots(Poly(f, extension=True)) == roots
+    assert real_roots(Poly(f), extension=True) == roots
+
 
 def test_all_roots():
 
@@ -3088,6 +3106,15 @@ def test_all_roots():
     assert all_roots(p) == [
         rootof(p, 0), rootof(p, 1), rootof(p, 2), rootof(p, 3), rootof(p, 4)
     ]
+
+    # testing extension
+    f = x**2 + sqrt(2)
+    roots = [-2**(S(1)/4)*I, 2**(S(1)/4)*I]
+    raises(NotImplementedError, lambda: all_roots(f))
+    raises(NotImplementedError, lambda : all_roots(Poly(f, x)))
+    assert all_roots(f, extension=True) == roots
+    assert all_roots(Poly(f, extension=True)) == roots
+    assert all_roots(Poly(f), extension=True) == roots
 
 
 def test_nroots():
@@ -3119,7 +3146,7 @@ def test_nroots():
     eps = Float("1e-5")
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is S.true
-    assert im(roots[0]) == 0.0
+    assert im(roots[0]) == 0
     assert re(roots[1]) == Float(-0.5, 5)
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is S.true
     assert re(roots[2]) == Float(-0.5, 5)
@@ -3132,7 +3159,7 @@ def test_nroots():
     eps = Float("1e-6")
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is S.false
-    assert im(roots[0]) == 0.0
+    assert im(roots[0]) == 0
     assert re(roots[1]) == Float(-0.5, 5)
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is S.false
     assert re(roots[2]) == Float(-0.5, 5)
@@ -3196,6 +3223,43 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+def test_which_real_roots():
+    f = Poly(x**4 - 1)
+
+    assert f.which_real_roots([1, -1]) == [1, -1]
+    assert f.which_real_roots([1, -1, 2, 4]) == [1, -1]
+    assert f.which_real_roots([1, -1, -1, 1, 2, 5]) == [1, -1]
+    assert f.which_real_roots([10, 8, 7, -1, 1]) == [-1, 1]
+
+    # no real roots
+    # (technically its still a superset)
+    f = Poly(x**2 + 1)
+    assert f.which_real_roots([5, 10]) == []
+
+    # not square free
+    f = Poly((x-1)**2)
+    assert f.which_real_roots([1, 1, -1, 2]) == [1]
+
+    # candidates not superset
+    f = Poly(x**2 - 1)
+    assert f.which_real_roots([0, 2]) == [0, 2]
+
+def test_which_all_roots():
+    f = Poly(x**4 - 1)
+
+    assert f.which_all_roots([1, -1, I, -I]) == [1, -1, I, -I]
+    assert f.which_all_roots([I, I, -I, 1, -1]) == [I, -I, 1, -1]
+
+    f = Poly(x**2 + 1)
+    assert f.which_all_roots([I, -I, I/2]) == [I, -I]
+
+    # not square free
+    f = Poly((x-I)**2)
+    assert f.which_all_roots([I, I, 1, -1, 0]) == [I]
+
+    # candidates not superset
+    f = Poly(x**2 + 1)
+    assert f.which_all_roots([I/2, -I/2]) == [I/2, -I/2]
 
 def test_same_root():
     f = Poly(x**4 + x**3 + x**2 + x + 1)
@@ -3403,6 +3467,12 @@ def test_cancel():
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
     assert cancel((x**2 + 1)/(x - I)) == x + I
+
+
+def test_cancel_modulus():
+    assert cancel((x**2 - 1)/(x + 1), modulus=2) == x + 1
+    assert Poly(x**2 - 1, modulus=2).cancel(Poly(x + 1, modulus=2)) ==\
+            (1, Poly(x + 1, modulus=2), Poly(1, x, modulus=2))
 
 
 def test_make_monic_over_integers_by_scaling_roots():
