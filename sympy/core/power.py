@@ -1651,7 +1651,7 @@ class Pow(OperatorAlgebraExpr):
                 return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         return res
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.elementary.exponential import exp, log
         e = self.exp
         b = self.base
