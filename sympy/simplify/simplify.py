@@ -632,7 +632,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
 
-
     # rationalize Floats
     floats = False
     if rational is not False and expr.has(Float):
@@ -813,7 +812,6 @@ def sum_combine(s_t):
 
     return result
 
-
 def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
     """Return Sum with constant factors extracted.
 
@@ -832,6 +830,7 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     >>> factor_sum(s.function, s.limits)
     y*Sum(x, (x, 1, 3))
     """
+
     # XXX deprecate in favor of direct call to factor_terms
     kwargs = {"radical": radical, "clear": clear,
         "fraction": fraction, "sign": sign}
