@@ -2632,9 +2632,12 @@ class TensAdd(TensExpr, AssocOp):
         under monoterm symmetries.
         """
         expr = self.expand()
-        args = [canon_bp(x) for x in expr.args]
-        res = TensAdd(*args).doit(deep=False)
-        return res
+        if isinstance(expr, self.func):
+            args = [canon_bp(x) for x in expr.args]
+            res = TensAdd(*args).doit(deep=False)
+            return res
+        else:
+            return canon_bp(expr)
 
     def equals(self, other):
         other = _sympify(other)
@@ -2663,7 +2666,7 @@ class TensAdd(TensExpr, AssocOp):
             return self.data[item]
 
     def contract_delta(self, delta):
-        args = [x.contract_delta(delta) for x in self.args]
+        args = [x.contract_delta(delta) if isinstance(x, TensExpr) else x for x in self.args]
         t = TensAdd(*args).doit(deep=False)
         return canon_bp(t)
 
@@ -5231,7 +5234,6 @@ def contract_metric(t, g):
     if isinstance(t, TensExpr):
         return t.contract_metric(g)
     return t
-
 
 def perm2tensor(t, g, is_canon_bp=False):
     """
