@@ -998,7 +998,7 @@ class adjoint(Function):
 
     def _latex(self, printer, exp=None, *args):
         arg = printer._print(self.args[0])
-        tex = r'%s^{\dagger}' % arg
+        tex = r'\left(%s\right)^{\dagger}' % arg
         if exp:
             tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
