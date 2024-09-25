@@ -423,6 +423,13 @@ def test_canonicalize3():
     t1 = t.canon_bp()
     assert t1 == -chi(a0)*psi(a1)
 
+def test_canonicalize4():
+    #Check whether TensAdd.canon_bp chokes on a case where the type of the expression changes on calling expand
+    Cartesian = TensorIndexType('Cartesian', dim=3)
+    p = tensor_indices("p", Cartesian)
+    K = TensorHead("K", [Cartesian])
+    expr = TensAdd( K(p) , - 2*K(p) )
+    assert expr.canon_bp() == -K(p)
 
 def test_TensorIndexType():
     D = Symbol('D')
@@ -1088,6 +1095,16 @@ def test_contract_delta1():
     t = P1(a, -b, b, -a)
     t1 = t.contract_delta(delta)
     assert t1.equals(n**2 - 1)
+
+def test_contract_delta2():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q = tensor_indices("p q", R3)
+    delta = R3.delta
+    K = TensorHead("K", [R3])
+
+    #Check if TensAdd.contract_delta can handle the case when the TensAdd has non-TensExpr args.
+    expr = 1 + K(p)*K(q)*delta(-p,-q)
+    assert expr.contract_delta(delta) == 1 + K(p)*K(-p)
 
 def test_fun():
     with warns_deprecated_sympy():
