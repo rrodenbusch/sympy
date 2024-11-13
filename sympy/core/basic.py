@@ -106,20 +106,13 @@ def _cmp_name(x: object, y: object) -> int:
     >>> basic.ordering_of_classes = save
 
     """
-
-    # If the other object is not a Basic subclass, then we are not equal to it.
-    # Generated a conflict merge 20241113
-    if not issubclass(y.__class__, Basic):
-        return -1
-
     n1 = x.__class__.__name__
     n2 = y.__class__.__name__
-
     if n1 == n2:
         return 0
 
     # If the other object is not a Basic subclass, then we are not equal to it.
-    if not issubclass(y, Basic):
+    if not issubclass(y.__class__, Basic):
         return -1
 
     UNKNOWN = len(ordering_of_classes) + 1
