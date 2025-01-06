@@ -1,11 +1,10 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
-from collections import defaultdict
-from collections.abc import Mapping
-from itertools import chain, zip_longest
+from collections.abc import Mapping, Iterable
+from itertools import zip_longest
 from functools import cmp_to_key
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -21,10 +20,12 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar
+    from typing import ClassVar, TypeVar, Any
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
+
+    Tbasic = TypeVar("Tbasic", bound='Basic')
 
 
 def as_Basic(expr):
@@ -127,6 +128,28 @@ def _cmp_name(x: object, y: object) -> int:
     if i1 == UNKNOWN and i2 == UNKNOWN:
         return (n1 > n2) - (n1 < n2)
     return (i1 > i2) - (i1 < i2)
+
+
+
+@cacheit
+def _get_postprocessors(clsname, arg_type):
+    # Since only Add, Mul, Pow can be clsname, this cache
+    # is not quadratic.
+    postprocessors = set()
+    mappings = _get_postprocessors_for_type(arg_type)
+    for mapping in mappings:
+        f = mapping.get(clsname, None)
+        if f is not None:
+            postprocessors.update(f)
+    return postprocessors
+
+@cacheit
+def _get_postprocessors_for_type(arg_type):
+    return tuple(
+        Basic._constructor_postprocessor_mapping[cls]
+        for cls in arg_type.mro()
+        if cls in Basic._constructor_postprocessor_mapping
+    )
 
 
 class Basic(Printable):
@@ -380,13 +403,17 @@ class Basic(Printable):
         #
         st = self._hashable_content()
         ot = other._hashable_content()
-        c = (len(st) > len(ot)) - (len(st) < len(ot))
+        len_st = len(st)
+        len_ot = len(ot)
+        c = (len_st > len_ot) - (len_st < len_ot)
         if c:
             return c
         for l, r in zip(st, ot):
-            l = Basic(*l) if isinstance(l, frozenset) else l
-            r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
+                c = l.compare(r)
+            elif isinstance(l, frozenset):
+                l = Basic(*l) if isinstance(l, frozenset) else l
+                r = Basic(*r) if isinstance(r, frozenset) else r
                 c = l.compare(r)
             else:
                 c = (l > r) - (l < r)
@@ -566,7 +593,12 @@ class Basic(Printable):
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
-    def atoms(self, *types):
+    @overload
+    def atoms(self) -> set[Basic]: ...
+    @overload
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Tbasic]: ...
+
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Basic] | set[Tbasic]:
         """Returns the atoms that form the current object.
 
         By default, only objects that are truly atomic and cannot
@@ -635,15 +667,12 @@ class Basic(Printable):
         {I*pi, 2*sin(y + I*pi)}
 
         """
-        if types:
-            types = tuple(
-                [t if isinstance(t, type) else type(t) for t in types])
         nodes = _preorder_traversal(self)
         if types:
-            result = {node for node in nodes if isinstance(node, types)}
+            types2 = tuple([t if isinstance(t, type) else type(t) for t in types])
+            return {node for node in nodes if isinstance(node, types2)}
         else:
-            result = {node for node in nodes if not node.args}
-        return result
+            return {node for node in nodes if not node.args}
 
     @property
     def free_symbols(self) -> set[Basic]:
@@ -844,7 +873,7 @@ class Basic(Printable):
         """
         return self._eval_is_comparable()
 
-    def _eval_is_comparable(self):
+    def _eval_is_comparable(self) -> bool:
         # Expr.is_comparable overrides this
         return False
 
@@ -926,7 +955,16 @@ class Basic(Printable):
         """
         return S.One, self
 
-    def subs(self, *args, **kwargs):
+    @overload
+    def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+    @overload
+    def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+    @overload
+    def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+    def subs(self, arg1: Mapping[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
+             arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """
         Substitutes old for new in an expression after sympifying args.
 
@@ -1043,26 +1081,28 @@ class Basic(Printable):
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
 
-        unordered = False
-        if len(args) == 1:
+        items: Iterable[tuple[Basic | complex, Basic | complex]]
 
-            sequence = args[0]
-            if isinstance(sequence, set):
+        unordered = False
+        if arg2 is None:
+
+            if isinstance(arg1, set):
+                items = arg1
                 unordered = True
-            elif isinstance(sequence, (Dict, Mapping)):
+            elif isinstance(arg1, (Dict, Mapping)):
                 unordered = True
-                sequence = sequence.items()
-            elif not iterable(sequence):
+                items = arg1.items() # type: ignore
+            elif not iterable(arg1):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
                    it should be a dictionary of old: new pairs or an iterable
                    of (old, new) tuples."""))
-        elif len(args) == 2:
-            sequence = [args]
+            else:
+                items = arg1 # type: ignore
         else:
-            raise ValueError("subs accepts either 1 or 2 arguments")
+            items = [(arg1, arg2)] # type: ignore
 
-        def sympify_old(old):
+        def sympify_old(old) -> Basic:
             if isinstance(old, str):
                 # Use Symbol rather than parse_expr for old
                 return Symbol(old)
@@ -1072,14 +1112,14 @@ class Basic(Printable):
             else:
                 return sympify(old, strict=True)
 
-        def sympify_new(new):
+        def sympify_new(new) -> Basic:
             if isinstance(new, (str, type)):
                 # Allow a type or parse a string input
                 return sympify(new, strict=False)
             else:
                 return sympify(new, strict=True)
 
-        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in items]
 
         # skip if there is no change
         sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
@@ -1088,18 +1128,18 @@ class Basic(Printable):
 
         if unordered:
             from .sorting import _nodes, default_sort_key
-            sequence = dict(sequence)
+            sequence_dict = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so
             # f(x) < f(y) < x < y
             # \___ 2 __/    \_1_/  <- number of nodes
             #
             # For more complex ordering use an unordered sequence.
-            k = list(ordered(sequence, default=False, keys=(
+            k = list(ordered(sequence_dict, default=False, keys=(
                 lambda x: -_nodes(x),
                 default_sort_key,
                 )))
-            sequence = [(k, sequence[k]) for k in k]
+            sequence = [(k, sequence_dict[k]) for k in k]
             # do infinities first
             if not simultaneous:
                 redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
@@ -1245,7 +1285,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new):
+    def _eval_subs(self, old, new) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1919,7 +1959,7 @@ class Basic(Printable):
         else:
             return self
 
-    def simplify(self, **kwargs):
+    def simplify(self, **kwargs) -> Basic:
         """See the simplify function in sympy.simplify"""
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
@@ -2032,6 +2072,11 @@ class Basic(Printable):
         pattern = args[:-1]
         rule = args[-1]
 
+        # Special case: map `abs` to `Abs`
+        if rule is abs:
+            from sympy.functions.elementary.complexes import Abs
+            rule = Abs
+
         # support old design by _eval_rewrite_as_[...] method
         if isinstance(rule, str):
             method = "_eval_rewrite_as_%s" % rule
@@ -2089,20 +2134,12 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = defaultdict(list)
+        postprocessors = set()
         for i in obj.args:
-            try:
-                postprocessor_mappings = (
-                    Basic._constructor_postprocessor_mapping[cls].items()
-                    for cls in type(i).mro()
-                    if cls in Basic._constructor_postprocessor_mapping
-                )
-                for k, v in chain.from_iterable(postprocessor_mappings):
-                    postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
-            except TypeError:
-                pass
+            for f in _get_postprocessors(clsname, type(i)):
+                postprocessors.add(f)
 
-        for f in postprocessors.get(clsname, []):
+        for f in postprocessors:
             obj = f(obj)
 
         return obj
@@ -2122,7 +2159,7 @@ class Basic(Printable):
             # call the freshly monkey-patched method
             return self._sage_()
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> bool:
         return False  # see Expr.could_extract_minus_sign
 
     def is_same(a, b, approx=None):
