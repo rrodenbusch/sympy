@@ -2,6 +2,7 @@
 
 from sympy.core.add import Add as cAdd
 from sympy.core.expr import Expr
+from sympy.core.kind import KindDispatcher
 from sympy.core.mul import Mul as cMul
 from sympy.core.power import Pow as cPow
 from .abstractalgebra import AbstractExpr, AbstractAdd as Add, AbstractMul as Mul
@@ -9,7 +10,7 @@ from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.kind import _OperatorKind, OperatorKind
 
 
 __all__ = [
@@ -93,6 +94,13 @@ class Commutator(AbstractExpr):
     .. [1] https://en.wikipedia.org/wiki/Commutator
     """
     is_commutative = False
+
+    _kind_dispatcher = KindDispatcher("Commutator_kind_dispatcher", commutative=True)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
 
     def __new__(cls, A, B):
         r = cls.eval(A, B)
@@ -200,6 +208,9 @@ class Commutator(AbstractExpr):
 
     def doit(self, **hints):
         """ Evaluate commutator """
+        # Keep the import of Operator here to avoid problems with
+        # circular imports.
+        from sympy.physics.quantum.operator import Operator
         A = self.args[0]
         B = self.args[1]
         if isinstance(A, Operator) and isinstance(B, Operator):
@@ -237,3 +248,9 @@ class Commutator(AbstractExpr):
     def _latex(self, printer, *args):
         return "\\left[%s,%s\\right]" % tuple([
             printer._print(arg, *args) for arg in self.args])
+
+
+@Commutator._kind_dispatcher.register(_OperatorKind, _OperatorKind)
+def find_op_kind(e1, e2):
+    """Find the kind of an anticommutator of two OperatorKinds."""
+    return OperatorKind
