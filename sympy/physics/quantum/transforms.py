@@ -12,7 +12,6 @@ THIS IS EXPERIMENTAL.
 """
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
-from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, ambiguity_register_error_ignore_dup
@@ -238,7 +237,7 @@ def _postprocess_state_mul(expr):
     if args:
         result.append(args[0])
 
-    return Mul._from_args(result, is_commutative=False)
+    return expr.__class__._from_args(result, is_commutative=False)
 
 
 def _postprocess_state_pow(expr):

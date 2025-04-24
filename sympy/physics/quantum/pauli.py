@@ -25,7 +25,7 @@ from .commutator import Commutator
 from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
-from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
+from sympy.physics.quantum import Operator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -206,7 +206,7 @@ class SigmaOpBase( AbstractExpr, Operator ):
         return self._sympyrepr( printer, *args )
 
 
-class SigmaI( SigmaOpBase, IdentityOperator ):
+class SigmaI( SigmaOpBase ):
     """Pauli sigma Identity operator
 
     Parameters
