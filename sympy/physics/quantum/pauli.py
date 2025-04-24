@@ -22,7 +22,7 @@ from .qcore import Add, Mul, Pow, QCore
 from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
-from sympy.physics.quantum import Operator, IdentityOperator, Ket, Bra
+from sympy.physics.quantum import Operator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -128,6 +128,9 @@ class SigmaOpBase( QCore, Operator ):
             else:
                 return SigmaI( self.name )
 
+    def identity(self):
+        return( SigmaI( self.name ) )
+
     def collect( self, syms, *args, **kwargs ):
         op_syms = list( filter( lambda x: isinstance( x, ( SigmaI, SigmaX, SigmaY, SigmaZ ) ), syms ) )
         other_syms = list( filter( lambda x: not isinstance( x, ( SigmaI, SigmaX, SigmaY, SigmaZ ) ), syms ) )
@@ -157,7 +160,7 @@ class SigmaOpBase( QCore, Operator ):
         return self._sympyrepr( printer, *args )
 
 
-class SigmaI( SigmaOpBase, IdentityOperator ):
+class SigmaI( SigmaOpBase ):
     """Pauli sigma Identity operator
 
     Parameters
