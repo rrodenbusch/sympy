@@ -8,6 +8,7 @@ from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.polyerrors import UnsolvableFactorError
 from sympy.polys.polyoptions import Options
 from sympy.polys.polytools import Poly
+from sympy.polys.rootoftools import CRootOf
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import flatten
 from sympy.abc import a, b, c, x, y, z
@@ -17,7 +18,7 @@ from sympy.solvers.polysys import (solve_poly_system,
                                    solve_biquadratic, SolveFailed,
                                    solve_generic, factor_system_bool,
                                    factor_system_cond, factor_system_poly,
-                                   factor_system)
+                                   factor_system, _factor_sets, _factor_sets_slow)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
 from sympy.core.relational import Eq
@@ -169,6 +170,10 @@ def test_solve_triangulated():
     dom = QQ.algebraic_field(sqrt(2))
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
+
+    a, b = CRootOf(z**2 + 2*z - 1, 0), CRootOf(z**2 + 2*z - 1, 1)
+    assert solve_triangulated([f_1, f_2, f_3], x, y, z, extension=True) == \
         [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
 
 
@@ -431,3 +436,27 @@ def test_factor_system_bool():
         (Eq(a, 0) & Eq(b, 0))
         | (Eq(x - 1, 0) & Eq(b, 0))
     )
+
+
+def test_factor_sets():
+    #
+    from random import randint
+
+    def generate_random_system(n_eqs=3, n_factors=2, max_val=10):
+        return [
+            [randint(0, max_val) for _ in range(randint(1, n_factors))]
+            for _ in range(n_eqs)
+        ]
+
+    test_cases = [
+        [[1, 2], [1, 3]],
+        [[1, 2], [3, 4]],
+        [[1], [1, 2], [2]],
+    ]
+
+    for case in test_cases:
+        assert _factor_sets(case) == _factor_sets_slow(case)
+
+    for _ in range(100):
+        system = generate_random_system()
+        assert _factor_sets(system) == _factor_sets_slow(system)
