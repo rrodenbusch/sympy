@@ -1136,7 +1136,12 @@ def fraction(expr, exact=False):
         else:
             numer.append(term)
     mul_handler = getattr(expr, '_mul_handler', Mul)
-    return mul_handler(*numer, evaluate=not exact), mul_handler(*denom, evaluate=not exact)
+    # Special case for matrix types
+    if not len(denom):
+        denom = S.One
+    else:
+        denom = mul_handler(*denom, evaluate=not exact)
+    return mul_handler(*numer, evaluate=not exact), denom
 
 
 def numer(expr, exact=False):  # default matches fraction's default
