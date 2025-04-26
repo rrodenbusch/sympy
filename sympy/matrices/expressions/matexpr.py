@@ -483,8 +483,8 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
     if (lhs - rhs).is_ZeroMatrix:
         return True
 
-def get_postprocessor(cls):
-    def _postprocessor(expr):
+def get_postprocessor(cls, **kwargs):
+    def _postprocessor(expr, **kwargs):
         # To avoid circular imports, we can't have MatMul/MatAdd on the top level
         mat_class = {Mul: MatMul, Add: MatAdd}[cls]
         nonmatrices = []

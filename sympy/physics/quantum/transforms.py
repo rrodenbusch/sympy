@@ -178,7 +178,7 @@ def _transform_op_op(a, b):
 #-----------------------------------------------------------------------------
 
 
-def _postprocess_state_mul(expr):
+def _postprocess_state_mul(expr, **kwargs):
     """Transform a ``Mul`` of quantum expressions into canonical form.
 
     This function is registered ``_constructor_postprocessor_mapping`` as a
@@ -238,10 +238,10 @@ def _postprocess_state_mul(expr):
     if args:
         result.append(args[0])
 
-    return Mul._from_args(result, is_commutative=False)
+    return Mul._from_args(result, is_commutative=False, **kwargs)
 
 
-def _postprocess_state_pow(expr):
+def _postprocess_state_pow(expr, **kwargs):
     """Handle bras and kets raised to powers.
 
     Under ``*`` multiplication this is invalid. Users should use a
@@ -254,7 +254,7 @@ def _postprocess_state_pow(expr):
         )
 
 
-def _postprocess_tp_pow(expr):
+def _postprocess_tp_pow(expr, **kwargs):
     """Handle TensorProduct(*operators)**(positive integer).
 
     This handles a tensor product of operators, to an integer power.

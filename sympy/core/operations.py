@@ -95,7 +95,7 @@ this object, use the * or + operator instead.
             evaluate = global_parameters.evaluate
         if not evaluate:
             obj = cls._from_args(args, **kwargs)
-            obj = cls._exec_constructor_postprocessors(obj)
+            obj = cls._exec_constructor_postprocessors(obj, **kwargs)
             return obj
 
         args = [a for a in args if a is not cls.identity]
@@ -109,7 +109,7 @@ this object, use the * or + operator instead.
         c_part, nc_part, order_symbols = cls.flatten(args)
         is_commutative = not nc_part
         obj = cls._from_args(c_part + nc_part, is_commutative, **kwargs)
-        obj = cls._exec_constructor_postprocessors(obj)
+        obj = cls._exec_constructor_postprocessors(obj, **kwargs)
 
         if order_symbols is not None:
             from sympy.series.order import Order

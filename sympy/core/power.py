@@ -232,12 +232,8 @@ class Pow(OperatorAlgebraExpr):
                 obj = base._eval_power(exp)
                 if obj is not None:
                     return obj
-<<<<<<< HEAD
-        obj = Expr.__new__(cls, b, e, algebra=b._algebra)
-=======
-        obj = Expr.__new__(cls, base, exp)
->>>>>>> master
-        obj = cls._exec_constructor_postprocessors(obj)
+        obj = Expr.__new__(cls, base, exp, algebra=base._algebra)
+        obj = cls._exec_constructor_postprocessors(obj, algebra=base._algebra)
         if not isinstance(obj, Pow):
             return obj
         obj.is_commutative = (base.is_commutative and exp.is_commutative)

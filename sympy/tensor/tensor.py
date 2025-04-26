@@ -5250,8 +5250,8 @@ def _get_wilds(expr):
     return list(expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead))
 
 
-def get_postprocessor(cls):
-    def _postprocessor(expr):
+def get_postprocessor(cls, **kwargs):
+    def _postprocessor(expr, **kwargs):
         tens_class = {Mul: TensMul, Add: TensAdd}[cls]
         if any(isinstance(a, TensExpr) for a in expr.args):
             return tens_class(*expr.args)

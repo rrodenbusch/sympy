@@ -2117,7 +2117,7 @@ class Basic(Printable):
     _constructor_postprocessor_mapping = {}  # type: ignore
 
     @classmethod
-    def _exec_constructor_postprocessors(cls, obj):
+    def _exec_constructor_postprocessors(cls, obj, **kwargs):
         # WARNING: This API is experimental.
 
         # This is an experimental API that introduces constructor
@@ -2130,7 +2130,7 @@ class Basic(Printable):
         postprocessors = {f for i in obj.args
                             for f in _get_postprocessors(clsname, type(i))}
         for f in postprocessors:
-            obj = f(obj)
+            obj = f(obj, **kwargs)
 
         return obj
 
