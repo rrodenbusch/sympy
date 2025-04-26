@@ -137,6 +137,8 @@ class OperatorAlgebraExpr(Expr):
     Implement methods of operator algebra in core classes Add, Mul and Pow
     """
 
+    __slots__ = ()
+
     @property
     def _op_priority(self):
         return getattr(self._algebra, '_op_priority', Expr._op_priority)

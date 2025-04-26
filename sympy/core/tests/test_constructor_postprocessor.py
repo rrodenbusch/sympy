@@ -10,9 +10,9 @@ class SymbolInMulOnce(Symbol):
 
 
 Basic._constructor_postprocessor_mapping[SymbolInMulOnce] = {
-    "Mul": [lambda x: x],
-    "Pow": [lambda x: x.base if isinstance(x.base, SymbolInMulOnce) else x],
-    "Add": [lambda x: x],
+    "Mul": [lambda x, *args, **kwargs: x],
+    "Pow": [lambda x, *args, **kwargs: x.base if isinstance(x.base, SymbolInMulOnce) else x],
+    "Add": [lambda x, *args, **kwargs: x],
 }
 
 
