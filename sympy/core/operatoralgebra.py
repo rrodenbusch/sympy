@@ -144,7 +144,7 @@ class OperatorAlgebraExpr(Expr):
         return getattr(self._algebra, '_op_priority', Expr._op_priority)
 
 
-    def __add__(self, other, **kwargs):
+    def __add__(self, other):
         if self._algebra is None:
             return Expr.__add__(self, other)
 
@@ -154,7 +154,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def __radd__(self, other, **kwargs):
+    def __radd__(self, other):
         if self._algebra is None:
             return Expr.__radd__(self, other)
 
@@ -164,7 +164,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def __sub__(self, other, **kwargs):
+    def __sub__(self, other):
         if self._algebra is None:
             return Expr.__sub__(self, other)
 
@@ -174,7 +174,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def __rsub__(self, other, **kwargs):
+    def __rsub__(self, other):
         if self._algebra is None:
             return Expr.__rsub__(self, other)
 
@@ -184,7 +184,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def __mul__(self, other, **kwargs):
+    def __mul__(self, other):
         if self._algebra is None:
             return Expr.__mul__(self, other)
 
@@ -194,7 +194,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def __rmul__(self, other, **kwargs):
+    def __rmul__(self, other):
         if self._algebra is None:
             return Expr.__rmul__(self, other)
 
@@ -204,7 +204,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def __truediv__(self, other, **kwargs):
+    def __truediv__(self, other):
         if self._algebra is None:
             return Expr.__truediv__(self, other)
 
@@ -214,7 +214,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def __rtruediv__(self, other, **kwargs):
+    def __rtruediv__(self, other):
         if self._algebra is None:
             return Expr.__rtruediv__(self, other)
 
@@ -234,7 +234,7 @@ class OperatorAlgebraExpr(Expr):
         return obj
 
 
-    def _pow(self, other, **kwargs):
+    def _pow(self, other):
         if self._algebra is None:
             return Expr._pow(self, other)
 

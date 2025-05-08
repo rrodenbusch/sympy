@@ -60,7 +60,7 @@ class MatrixExpr(Expr):
     # iterable (i.e., explicit matrices) should set this to True.
     _iterable = False
 
-    _op_priority = 11.0
+    _op_priority: float = 11.0
 
     is_Matrix: bool = True
     is_MatrixExpr: bool = True

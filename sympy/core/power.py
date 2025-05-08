@@ -136,9 +136,9 @@ class Pow(OperatorAlgebraExpr):
     @cacheit
     def __new__(cls, b: Expr | complex, e: Expr | complex, evaluate=None) -> Expr: # type: ignore
         if getattr(b,'_algebra',None) is not None:
-            _handler = getattr(b._algebra, '_pow', Expr._pow)
+            _handler = getattr(b._algebra, '_pow', Expr._pow) # type: ignore
             if _handler is not Expr._pow:
-                obj = _handler(b,e)
+                obj = _handler(b,e) # type: ignore
                 if obj is not NotImplemented:
                     return obj
 

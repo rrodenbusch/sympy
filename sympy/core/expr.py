@@ -71,7 +71,7 @@ class Expr(Basic, EvalfMixin):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Basic) -> Self:
+        def __new__(cls, *args: Basic, **kwargs: Basic) -> Self:
             ...
 
         @overload # type: ignore
