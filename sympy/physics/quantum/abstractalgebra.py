@@ -15,8 +15,13 @@ import sympy.core.add
 import sympy.core.mul
 import sympy.core.power
 
-from sympy.core.basic import ordering_of_classes
+from sympy.core.basic import ordering_of_classes, Basic
+from typing import TYPE_CHECKING, overload
+from collections.abc import Iterable, Mapping
 
+if TYPE_CHECKING:
+    from typing import Any
+    from typing_extensions import Self
 
 def _all_priority_args( *args, **kwargs ):
     all_args = []
@@ -359,6 +364,28 @@ class AbstractSymbol( Symbol, AbstractExpr ):
     # Add property to support operator compare since adding
     # the new class name to the ordering_of_classes list in basic
     _class_order = ordering_of_classes.index( 'Symbol' )
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Basic) -> Self:
+            ...
+
+        @overload # type: ignore
+        def subs(self, arg1: Mapping[Basic | complex, Expr | complex], arg2: None=None) -> Expr: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Expr | complex]], arg2: None=None, **kwargs: Any) -> Expr: ...
+        @overload
+        def subs(self, arg1: Expr | complex, arg2: Expr | complex) -> Expr: ...
+        @overload
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        @overload
+        def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+                 arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
+            ...
+
 
 
 def abstract_symbols( names, *args, cls=Symbol, **kwargs ):
@@ -392,7 +419,7 @@ class AbstractAdd( AbstractAlgebra, Add ):
             other = AbstractAdd( *other.args )
         return super().__eq__( other )
 
-    __hash__ = sympy.core.add.Add.__hash__
+    __hash__ = sympy.core.add.Add.__hash__ # type: ignore
 
 
 class AbstractMul( AbstractAlgebra, Mul ):
@@ -422,7 +449,7 @@ class AbstractMul( AbstractAlgebra, Mul ):
             other = AbstractMul( *other.args )
         return super().__eq__( other )
 
-    __hash__ = sympy.core.mul.Mul.__hash__
+    __hash__ = sympy.core.mul.Mul.__hash__ # type: ignore
 
 
 class AbstractPow( AbstractAlgebra, Pow ):
