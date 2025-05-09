@@ -933,9 +933,9 @@ def qcollect_pauli(e, ops=None, *args, **kwargs):
     >>> sx, sy = SigmaX(), SigmaY()
     >>> (a,b,c,d) = symbols('a:d')
     >>> a*sx + b*sx + c*sy + d*sy
-    a*SigmaX() + b*SigmaX() +c*SigmaY() + d*SigmaY()
+    a*SigmaX() + b*SigmaX() + c*SigmaY() + d*SigmaY()
     >>> qcollect_pauli(a*sx + b*sx + c*sy + d*sy)
-    (a+b)*SigmaX() + (c+d)*SigmaY()
+    (a + b)*SigmaX() + (c + d)*SigmaY()
     """
     if isinstance(e, (Operator, Symbol)):
         return e
