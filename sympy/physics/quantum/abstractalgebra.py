@@ -485,7 +485,7 @@ class AbstractPow( AbstractAlgebra, Pow ):
 def _set_evalf_entry():
     """ Add the evalf processor functions to the global table """
     from sympy.core.evalf import evalf_table, evalf_add, evalf_mul, evalf_pow
-    global evalf_table
+
     evalf_table[AbstractAdd] = evalf_add
     evalf_table[AbstractMul] = evalf_mul
     evalf_table[AbstractPow] = evalf_pow
