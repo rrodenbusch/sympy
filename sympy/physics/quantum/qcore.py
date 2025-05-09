@@ -282,7 +282,7 @@ class Pow( QCore, sympy.core.power.Pow ):
 def _set_evalf_entry():
     """ Add the evalf processor functions to the global table """
     from sympy.core.evalf import evalf_table, evalf_add, evalf_mul, evalf_pow
-    global evalf_table
+
     evalf_table[Add] = evalf_add
     evalf_table[Mul] = evalf_mul
     evalf_table[Pow] = evalf_pow
