@@ -1135,8 +1135,14 @@ def fraction(expr, exact=False):
             denom.append(term.q)
         else:
             numer.append(term)
-    mul_handler = getattr(expr, '_mul_handler', Mul)
-    # Special case for matrix types
+
+    # Special case for matrix types requiring Mul
+    from sympy.matrices.expressions.matexpr import MatMul
+    if isinstance(expr, MatMul):
+        mul_handler = Mul
+    else:
+        mul_handler = getattr(expr, '_mul_handler', Mul)
+    # Special case for integrals/tests/test_integrals
     if not len(denom):
         denom = S.One
     else:
