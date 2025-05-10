@@ -90,20 +90,19 @@ def _cmp_name(x: object, y: object) -> int:
     A string comparison is done if neither appears
     in `ordering_of_classes` and neither has a _class_order attribute.
     This is the helper for ``Basic.compare``
-
     Examples
     ========
 
-    >>> from sympy import cos, tan, sin
-    >>> from sympy.core import basic
+    >>> from sympy.core import basic, Mul, Add, Pow, symbols
     >>> save = basic.ordering_of_classes
     >>> basic.ordering_of_classes = ()
-    >>> basic._cmp_name(cos, tan)
+    >>> a,b = symbols('a b')
+    >>> basic._cmp_name(Add(a,b), Mul(a,b))
     -1
-    >>> basic.ordering_of_classes = ["tan", "sin", "cos"]
-    >>> basic._cmp_name(cos, tan)
+    >>> basic.ordering_of_classes = ["Pow", "Mul", "Add"]
+    >>> basic._cmp_name(Add(a,b), Mul(a,b))
     1
-    >>> basic._cmp_name(sin, cos)
+    >>> basic._cmp_name(Pow(a,b), Mul(a,b))
     -1
     >>> basic.ordering_of_classes = save
 
