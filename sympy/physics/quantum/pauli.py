@@ -481,8 +481,10 @@ class SigmaMinus( SigmaOpBase ):
     [1, 0]])
     """
 
-    def __new__( cls, *args, **hints ):
-        return SigmaOpBase.__new__( cls, *args )
+    is_annihilation = True
+
+    def __new__(cls, *args, **hints):
+        return SigmaOpBase.__new__(cls, *args)
 
     def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
@@ -571,8 +573,10 @@ class SigmaPlus( SigmaOpBase ):
     [0, 0]])
     """
 
-    def __new__( cls, *args, **hints ):
-        return SigmaOpBase.__new__( cls, *args )
+    is_annihilation = False
+
+    def __new__(cls, *args, **hints):
+        return SigmaOpBase.__new__(cls, *args)
 
     def _eval_commutator_SigmaI( self, other, **hints ):
         return S.Zero
