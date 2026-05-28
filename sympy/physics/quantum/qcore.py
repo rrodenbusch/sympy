@@ -9,6 +9,7 @@
        Create function exp as subclass of functions.elementary.exponential.exp to
         support rotation operators expressed as exp(i*theta*Op) [theta:real, Op:Operator]
 """
+from __future__ import annotations
 import sympy
 from sympy import sympify, simplify
 from sympy.core.singleton import S

@@ -5,9 +5,10 @@
        return S.One instead of ident and issue depecration
        warning.  Three test cases fail with SigmaI as the
        default multiplicative identity:
-            assert qsimplify_pauli(sx * sx) == 1
-            assert qsimplify_pauli(sy * sy) == 1
-            assert qsimplify_pauli(sz * sz) == 1
+
+       assert qsimplify_pauli(sx * sx) == 1
+       assert qsimplify_pauli(sy * sy) == 1
+       assert qsimplify_pauli(sz * sz) == 1
 
 """
 from __future__ import annotations
