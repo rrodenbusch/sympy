@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import symbols
 import sympy.core.mul
 from sympy.physics.quantum.qcore import QCore, Add, Mul, Pow

@@ -10,6 +10,7 @@
             assert qsimplify_pauli(sz * sz) == 1
 
 """
+from __future__ import annotations
 
 import sympy.core.add
 import sympy.core.mul
