@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import symbols
 from sympy.core.numbers import I
 from sympy.core.add import Add

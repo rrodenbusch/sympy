@@ -12,6 +12,7 @@
     Any remaining symbols will then be passed to the core collect function.
 
 """
+from __future__ import annotations
 from sympy import collect as core_collect
 from sympy.physics.quantum import Operator
 

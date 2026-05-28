@@ -446,19 +446,13 @@ class Pow(OperatorAlgebraExpr):
                 return True
             if self.exp.is_even:
                 return False
-        elif self.base.is_extended_positive:
-            if self.exp.is_extended_real:
-                return False
-        elif self.base.is_zero:
+        elif self.base.is_extended_positive or self.base.is_zero:
             if self.exp.is_extended_real:
                 return False
         elif self.base.is_extended_nonnegative:
             if self.exp.is_extended_nonnegative:
                 return False
-        elif self.base.is_extended_nonpositive:
-            if self.exp.is_even:
-                return False
-        elif self.base.is_extended_real:
+        elif self.base.is_extended_nonpositive or self.base.is_extended_real:
             if self.exp.is_even:
                 return False
 
@@ -1145,9 +1139,14 @@ class Pow(OperatorAlgebraExpr):
             from sympy.polys.polytools import poly
 
             exp = self.exp
+            if exp < 0 and self.base.is_zero:
+                return (S.NaN, S.NaN)
+
             re_e, im_e = self.base.as_real_imag(deep=deep)
+
             if not im_e:
                 return self, S.Zero
+
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re_e.is_Number and im_e.is_Number:
@@ -1225,8 +1224,11 @@ class Pow(OperatorAlgebraExpr):
 
     def _eval_derivative(self, s):
         from sympy.functions.elementary.exponential import log
+        if not self.base.is_commutative:
+            return None
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
+
         return self * (dexp * log(self.base) + dbase * self.exp/self.base)
 
     def _eval_evalf(self, prec):

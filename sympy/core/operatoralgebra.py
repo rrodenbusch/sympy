@@ -57,6 +57,7 @@
     Implement the metaclass search the class bases for an algebra.
 
 """
+from __future__ import annotations
 from .expr import Expr
 from .basic import Basic
 

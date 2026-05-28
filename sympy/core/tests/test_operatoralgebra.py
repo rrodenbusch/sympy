@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.operatoralgebra import OperatorAlgebra, OperatorAlgebraExpr, OperatorAlgebraMeta
 from sympy.core.expr import Expr
 from sympy.core.symbol import symbols
