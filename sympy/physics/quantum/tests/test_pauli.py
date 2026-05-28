@@ -9,7 +9,7 @@
     expand().simplify()
 
 """
-
+from __future__ import annotations
 from sympy import symbols
 import sympy.core.mul
 from sympy.physics.quantum.abstractalgebra import AbstractAlgebra, AbstractAdd, AbstractMul, AbstractPow

@@ -9,7 +9,7 @@
     abstract_symbols: function to return a list AbstractSymbol similar to symbols function
 
 """
-
+from __future__ import annotations
 from sympy.core.expr import Expr
 import sympy.core.add
 import sympy.core.mul
@@ -17,11 +17,11 @@ import sympy.core.power
 
 from sympy.core.basic import ordering_of_classes, Basic
 from typing import TYPE_CHECKING, overload
-from collections.abc import Iterable, Mapping
 
 if TYPE_CHECKING:
     from typing import Any
     from typing_extensions import Self
+    from collections.abc import Iterable, Mapping
 
 def _all_priority_args( *args, **kwargs ):
     all_args = []
